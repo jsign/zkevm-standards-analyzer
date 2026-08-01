@@ -171,7 +171,12 @@ export function ArtifactCell({ artifact }: { artifact: ArtifactReport }) {
   const counts = artifactCounts(artifact);
   return (
     <Link className="artifact-cell" to={`/artifact/${encodeURIComponent(artifact.id)}`}>
-      <span className="artifact-name">{artifact.guest}</span>
+      <span className="artifact-name">
+        View evidence <span aria-hidden="true">→</span>
+        <span className="visually-hidden">
+          {" "}for {artifact.guest} on {artifact.zkvm}
+        </span>
+      </span>
       <span className="artifact-cell-counts">
         {counts.fail > 0 && <span className="mini-fail">{counts.fail} fail</span>}
         {counts.warning > 0 && (
