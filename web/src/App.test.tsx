@@ -91,6 +91,50 @@ describe("artifact ELF structure", () => {
     expect(screen.getByText(".symtab")).toBeInTheDocument();
     expect(screen.getByText("RISC-V architecture attributes")).toBeInTheDocument();
   });
+
+  it("decodes the declared RISC-V ISA and links every component to a reference", () => {
+    const architecture =
+      "rv64i2p1_m2p0_a2p1_zmmul1p0_zaamo1p0_zalrsc1p0";
+    const report = {
+      ...fixtureReport,
+      artifacts: [
+        {
+          ...fixtureReport.artifacts[0],
+          analysis: {
+            ...fixtureAnalysis,
+            header: {
+              ...fixtureAnalysis.header,
+              riscv_arch: architecture,
+            },
+          },
+        },
+      ],
+    };
+
+    render(
+      <ArtifactPage
+        report={report}
+        artifactId={fixtureReport.artifacts[0].id}
+      />,
+    );
+
+    expect(screen.getByText(architecture)).toBeInTheDocument();
+    expect(screen.getByText("6 components")).toBeInTheDocument();
+    expect(screen.getByText("64-bit base integer ISA.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Integer multiplication subset of M, without division."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Load-reserved/store-conditional atomic operations."),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("v2.1")).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: /Tag_RISCV_arch reference/i }),
+    ).toHaveAttribute("href", expect.stringContaining("#tag_riscv_arch"));
+    expect(
+      screen.getByRole("link", { name: /Zmmul.*without division.*RISC-V ISA/i }),
+    ).toHaveAttribute("href", expect.stringContaining("m-st-ext.html"));
+  });
 });
 
 describe("application states", () => {

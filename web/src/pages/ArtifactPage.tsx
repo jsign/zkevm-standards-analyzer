@@ -6,6 +6,10 @@ import {
   artifactCounts,
   formatBytes,
 } from "../components";
+import {
+  decodeRiscvArchitecture,
+  RISCV_ARCH_ATTRIBUTE_REFERENCE,
+} from "../riscv";
 import type { ElfAnalysis, ReportV1 } from "../types";
 
 export function ArtifactPage({
@@ -243,10 +247,12 @@ function ElfStructure({
           <p className="eyebrow">Binary anatomy</p>
           <h2>ELF structure</h2>
         </div>
-        <span className="mono elf-architecture">
-          {analysis.header.riscv_arch ?? "No Tag_arch"}
-        </span>
+        <a href={RISCV_ARCH_ATTRIBUTE_REFERENCE}>
+          Tag_RISCV_arch reference <span aria-hidden="true">↗</span>
+        </a>
       </div>
+
+      <RiscvArchitecture architecture={analysis.header.riscv_arch} />
 
       <div className="elf-root">
         <span className="elf-root-mark" aria-hidden="true">ELF</span>
@@ -526,6 +532,64 @@ function ElfStructure({
         </div>
       </div>
     </section>
+  );
+}
+
+function RiscvArchitecture({
+  architecture,
+}: {
+  architecture: string | null;
+}) {
+  if (!architecture) {
+    return (
+      <div className="isa-declaration isa-declaration-empty">
+        <span className="quiet-label">Declared RISC-V ISA</span>
+        <strong>No Tag_RISCV_arch attribute reported</strong>
+      </div>
+    );
+  }
+
+  const components = decodeRiscvArchitecture(architecture);
+
+  return (
+    <div className="isa-declaration">
+      <div className="isa-declaration-heading">
+        <div>
+          <span className="quiet-label">Declared RISC-V ISA</span>
+          <code>{architecture}</code>
+        </div>
+        <span>
+          {components.length} {components.length === 1 ? "component" : "components"}
+        </span>
+      </div>
+
+      {components.length > 0 && (
+        <div className="isa-component-grid">
+          {components.map((component) => (
+            <a
+              className="isa-component"
+              href={component.referenceUrl}
+              key={component.id}
+            >
+              <span className="isa-component-name">
+                <code>{component.label}</code>
+                {component.version && <small>v{component.version}</small>}
+              </span>
+              <span>{component.description}</span>
+              <small>
+                {component.referenceLabel} <span aria-hidden="true">↗</span>
+              </small>
+            </a>
+          ))}
+        </div>
+      )}
+
+      <p className="isa-declaration-note">
+        Versions use <code>p</code> as the decimal point: <code>2p1</code> means{" "}
+        <code>2.1</code>. This is the target ISA declared by the ELF, not a census
+        of instructions observed in its code.
+      </p>
+    </div>
   );
 }
 

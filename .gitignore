@@ -4,3 +4,4 @@
 /web/public/data/report.json
 *.tsbuildinfo
 .DS_Store
+.envrc
