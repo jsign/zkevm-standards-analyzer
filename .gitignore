@@ -1,4 +1,5 @@
 /target/
+/.cache/
 /web/node_modules/
 /web/dist/
 /web/public/data/report.json

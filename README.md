@@ -87,6 +87,11 @@ Set `GITHUB_TOKEN` to avoid anonymous API rate limits. A finding with status
 fatal operational failures such as an unresolved release or standards ref.
 Individual asset errors are retained in the report.
 
+Downloaded release assets are kept in a content-addressed cache at
+`.cache/zkevm-analyzer` by default. Cached bytes are verified against SHA-256
+before reuse, so subsequent analyses of the same assets avoid downloading them
+again. Use `--cache-dir <path>` to select a different location.
+
 Generate the versioned schema with:
 
 ```console

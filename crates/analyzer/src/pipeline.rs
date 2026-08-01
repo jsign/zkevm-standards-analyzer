@@ -8,6 +8,7 @@ use chrono::Utc;
 use tempfile::TempDir;
 
 use crate::{
+    cache::AssetCache,
     elf::analyze_elf,
     github::{DownloadResult, GithubAsset, GithubClient, GithubRelease},
     model::{
@@ -32,6 +33,7 @@ pub struct AnalyzeOptions {
     pub release: String,
     pub standards_ref: String,
     pub rules_path: PathBuf,
+    pub cache_dir: PathBuf,
 }
 
 pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
@@ -89,7 +91,7 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
         .map(|asset| asset.browser_download_url.clone());
 
     let tempdir = tempfile::tempdir().context("failed to create analysis workspace")?;
-    let mut cache = DownloadCache::new(&github, tempdir);
+    let mut cache = DownloadCache::new(&github, tempdir, &options.cache_dir);
     let assets_by_name = release
         .assets
         .iter()
@@ -369,10 +371,7 @@ async fn analyze_source(
             error: Some("source release does not contain the declared asset".into()),
         });
     };
-    match cache
-        .get(&source_asset.browser_download_url, &source_asset.name)
-        .await
-    {
+    match cache.get(source_asset).await {
         Ok(download) => Some(SourceEvidence {
             repository: format!("{}/{}", parsed.owner, parsed.repo),
             release_tag: parsed.tag,
@@ -435,7 +434,7 @@ async fn asset_evidence(
     asset: &GithubAsset,
     signature: Option<&GithubAsset>,
 ) -> (AssetEvidence, Option<PathBuf>) {
-    match cache.get(&asset.browser_download_url, &asset.name).await {
+    match cache.get(asset).await {
         Ok(download) => {
             let digest_matches =
                 compare_github_digest(asset.digest.as_deref(), &download.result.sha256);
@@ -486,25 +485,60 @@ struct CachedDownload {
 struct DownloadCache<'a> {
     github: &'a GithubClient,
     workspace: TempDir,
+    persistent: Option<AssetCache>,
     entries: HashMap<String, CachedDownload>,
     next_id: usize,
 }
 
 impl<'a> DownloadCache<'a> {
-    fn new(github: &'a GithubClient, workspace: TempDir) -> Self {
+    fn new(github: &'a GithubClient, workspace: TempDir, cache_dir: &std::path::Path) -> Self {
+        let persistent = match AssetCache::new(cache_dir) {
+            Ok(cache) => Some(cache),
+            Err(error) => {
+                eprintln!(
+                    "warning: persistent asset cache at {} is unavailable: {error:#}",
+                    cache_dir.display()
+                );
+                None
+            }
+        };
         Self {
             github,
             workspace,
+            persistent,
             entries: HashMap::new(),
             next_id: 0,
         }
     }
 
-    async fn get(&mut self, url: &str, hint: &str) -> anyhow::Result<CachedDownload> {
-        if let Some(download) = self.entries.get(url) {
+    async fn get(&mut self, asset: &GithubAsset) -> anyhow::Result<CachedDownload> {
+        if let Some(download) = self.entries.get(&asset.browser_download_url) {
             return Ok(download.clone());
         }
-        let safe_hint = hint
+        if let Some(persistent) = &self.persistent {
+            match persistent.lookup(
+                &asset.browser_download_url,
+                asset.size,
+                asset.digest.as_deref(),
+            ) {
+                Ok(Some(cached)) => {
+                    let download = CachedDownload {
+                        path: cached.path,
+                        result: cached.result,
+                    };
+                    self.entries
+                        .insert(asset.browser_download_url.clone(), download.clone());
+                    return Ok(download);
+                }
+                Ok(None) => {}
+                Err(error) => eprintln!(
+                    "warning: failed to read cached asset {}: {error:#}",
+                    asset.name
+                ),
+            }
+        }
+        let safe_hint = asset
+            .name
             .chars()
             .map(|character| {
                 if character.is_ascii_alphanumeric() || matches!(character, '.' | '-') {
@@ -519,9 +553,35 @@ impl<'a> DownloadCache<'a> {
             .path()
             .join(format!("{:03}-{safe_hint}", self.next_id));
         self.next_id += 1;
-        let result = self.github.download_to(url, &path).await?;
-        let download = CachedDownload { path, result };
-        self.entries.insert(url.to_string(), download.clone());
+        let result = self
+            .github
+            .download_to(&asset.browser_download_url, &path)
+            .await?;
+        let download = if let Some(persistent) = &self.persistent {
+            match persistent.store(
+                &asset.browser_download_url,
+                asset.size,
+                asset.digest.as_deref(),
+                &path,
+                &result,
+            ) {
+                Ok(cached) => CachedDownload {
+                    path: cached.path,
+                    result: cached.result,
+                },
+                Err(error) => {
+                    eprintln!(
+                        "warning: failed to cache downloaded asset {}: {error:#}",
+                        asset.name
+                    );
+                    CachedDownload { path, result }
+                }
+            }
+        } else {
+            CachedDownload { path, result }
+        };
+        self.entries
+            .insert(asset.browser_download_url.clone(), download.clone());
         Ok(download)
     }
 }

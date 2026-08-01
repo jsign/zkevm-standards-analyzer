@@ -25,6 +25,9 @@ enum Command {
         /// Atomic rule catalog.
         #[arg(long, default_value = "rules/standards.yml")]
         rules: PathBuf,
+        /// Persistent cache for downloaded release assets.
+        #[arg(long, default_value = ".cache/zkevm-analyzer")]
+        cache_dir: PathBuf,
         /// Destination report JSON.
         #[arg(long)]
         output: PathBuf,
@@ -45,12 +48,14 @@ async fn main() -> anyhow::Result<()> {
             release,
             standards_ref,
             rules,
+            cache_dir,
             output,
         } => {
             let report = analyze(AnalyzeOptions {
                 release,
                 standards_ref,
                 rules_path: rules,
+                cache_dir,
             })
             .await?;
             write_json(&output, &report)?;

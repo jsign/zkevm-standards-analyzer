@@ -1,3 +1,5 @@
+mod cache;
+
 pub mod elf;
 pub mod github;
 pub mod model;
