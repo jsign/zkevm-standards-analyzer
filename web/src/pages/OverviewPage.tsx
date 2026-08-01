@@ -4,7 +4,6 @@ import {
   EvidenceCounts,
   FindingList,
   PageHeader,
-  artifactCounts,
   shortSha,
 } from "../components";
 import type { ReportV1 } from "../types";
@@ -152,52 +151,22 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
         </div>
       </section>
 
-      <div className="overview-grid">
-        <section className="section-block">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Attention</p>
-              <h2>Static failures</h2>
-            </div>
+      <section className="section-block">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Attention</p>
+            <h2>Static failures</h2>
           </div>
-          {critical.length ? (
-            <FindingList
-              compact
-              findings={critical.map(({ finding }) => finding)}
-            />
-          ) : (
-            <p className="empty-state">No static failures were observed.</p>
-          )}
-        </section>
-
-        <aside className="method-note">
-          <p className="eyebrow">How to read this</p>
-          <h2>No score by design</h2>
-          <p>
-            A pass means the available evidence satisfies one atomic check. It
-            does not turn unknown runtime behavior into compliance.
-          </p>
-          <dl>
-            <div>
-              <dt>{report.artifacts.length}</dt>
-              <dd>ELFs</dd>
-            </div>
-            <div>
-              <dt>
-                {report.artifacts.filter(
-                  (artifact) => artifactCounts(artifact).fail > 0,
-                ).length}
-              </dt>
-              <dd>with static failures</dd>
-            </div>
-            <div>
-              <dt>{report.platforms.length}</dt>
-              <dd>zkVM targets</dd>
-            </div>
-          </dl>
-          <Link to="/standards">See automation coverage →</Link>
-        </aside>
-      </div>
+        </div>
+        {critical.length ? (
+          <FindingList
+            compact
+            findings={critical.map(({ finding }) => finding)}
+          />
+        ) : (
+          <p className="empty-state">No static failures were observed.</p>
+        )}
+      </section>
     </>
   );
 }

@@ -14,7 +14,7 @@ describe("overview", () => {
       <OverviewPage report={fixtureReport} />,
     );
     expect(screen.getByRole("heading", { name: /v0.14.1 evidence report/i })).toBeInTheDocument();
-    expect(screen.getByText("No score by design")).toBeInTheDocument();
+    expect(screen.queryByText("No score by design")).not.toBeInTheDocument();
     expect(screen.getByText("reth", { selector: "strong" })).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", { name: /openvm v2\.0\.0/i }),

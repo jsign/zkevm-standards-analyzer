@@ -324,7 +324,6 @@ footer a {
 }
 
 .section-heading h2,
-.method-note h2,
 .standard-heading h2 {
   margin: 0;
   font-family: Georgia, serif;
@@ -451,58 +450,10 @@ table {
   font-weight: 750;
 }
 
-.overview-grid,
 .detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
   gap: 28px;
-}
-
-.method-note {
-  align-self: start;
-  margin-top: 32px;
-  padding: 30px;
-  color: #eaf3ee;
-  background: var(--deep);
-}
-
-.method-note .eyebrow {
-  color: #8de0b9;
-}
-
-.method-note p:not(.eyebrow) {
-  color: #abc0b6;
-  line-height: 1.6;
-}
-
-.method-note dl {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin: 26px 0;
-  border-top: 1px solid #2d4037;
-  border-bottom: 1px solid #2d4037;
-}
-
-.method-note dl div {
-  padding: 18px 6px 18px 0;
-}
-
-.method-note dt {
-  color: #8de0b9;
-  font-family: Georgia, serif;
-  font-size: 28px;
-}
-
-.method-note dd {
-  margin: 3px 0 0;
-  color: #91a69c;
-  font-size: 10px;
-}
-
-.method-note > a {
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .status {
@@ -1464,7 +1415,6 @@ table {
   }
 
   .page-header,
-  .overview-grid,
   .detail-grid,
   .standard-heading {
     grid-template-columns: 1fr;
@@ -1531,8 +1481,7 @@ table {
   }
 
   .section-block,
-  .standard-section,
-  .method-note {
+  .standard-section {
     padding: 20px 16px;
   }
 
