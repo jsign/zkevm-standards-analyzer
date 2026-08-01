@@ -16,7 +16,14 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
     (artifact) => artifact.variant === "profiling",
   );
   const guests = [...new Set(primary.map((artifact) => artifact.guest))];
-  const zkvms = [...new Set(primary.map((artifact) => artifact.zkvm))];
+  const zkvmColumns = [
+    ...new Map(
+      primary.map((artifact) => [
+        `${artifact.zkvm}:${artifact.zkvm_version}`,
+        { zkvm: artifact.zkvm, version: artifact.zkvm_version },
+      ] as const),
+    ).values(),
+  ];
   const critical = primary
     .flatMap((artifact) =>
       artifact.findings
@@ -104,8 +111,15 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
             <thead>
               <tr>
                 <th scope="col">Guest</th>
-                {zkvms.map((zkvm) => (
-                  <th scope="col" key={zkvm}>{zkvm}</th>
+                {zkvmColumns.map(({ zkvm, version }) => (
+                  <th
+                    scope="col"
+                    key={`${zkvm}:${version}`}
+                    aria-label={`${zkvm} ${version}`}
+                  >
+                    <span>{zkvm}</span>
+                    <small>{version}</small>
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -119,12 +133,15 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
                         ?.guest_version ?? "version unavailable"}
                     </small>
                   </th>
-                  {zkvms.map((zkvm) => {
+                  {zkvmColumns.map(({ zkvm, version }) => {
                     const artifact = primary.find(
-                      (item) => item.guest === guest && item.zkvm === zkvm,
+                      (item) =>
+                        item.guest === guest &&
+                        item.zkvm === zkvm &&
+                        item.zkvm_version === version,
                     );
                     return (
-                      <td key={zkvm}>
+                      <td key={`${zkvm}:${version}`}>
                         {artifact ? (
                           <ArtifactCell artifact={artifact} />
                         ) : (

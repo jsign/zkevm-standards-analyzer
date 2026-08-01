@@ -365,6 +365,20 @@ table {
   text-transform: uppercase;
 }
 
+.matrix-table thead th > span,
+.matrix-table thead th > small {
+  display: block;
+}
+
+.matrix-table thead th > small {
+  margin-top: 4px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .matrix-table tbody > tr > th {
   min-width: 170px;
   background: #f8f9f5;
@@ -399,14 +413,6 @@ table {
 
 .artifact-name {
   font-weight: 750;
-}
-
-.artifact-name small {
-  float: right;
-  color: var(--muted);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
-  font-weight: 500;
 }
 
 .artifact-cell-counts {

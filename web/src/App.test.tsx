@@ -15,6 +15,10 @@ describe("overview", () => {
     expect(screen.getByRole("heading", { name: /v0.14.1 evidence report/i })).toBeInTheDocument();
     expect(screen.getByText("No score by design")).toBeInTheDocument();
     expect(screen.getByText("reth", { selector: "strong" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /openvm v2\.0\.0/i }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("v2.0.0")).toHaveLength(1);
     expect(screen.queryByText(/compliance percentage/i)).not.toBeInTheDocument();
   });
 
