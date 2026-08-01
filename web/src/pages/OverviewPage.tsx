@@ -5,26 +5,21 @@ import {
   FindingList,
   PageHeader,
   artifactCounts,
-  formatBytes,
   shortSha,
 } from "../components";
-import type { ArtifactReport, ReportV1 } from "../types";
+import type { ReportV1 } from "../types";
 
 export function OverviewPage({ report }: { report: ReportV1 }) {
-  const primary = report.artifacts.filter((artifact) => artifact.variant === "primary");
-  const profiling = report.artifacts.filter(
-    (artifact) => artifact.variant === "profiling",
-  );
-  const guests = [...new Set(primary.map((artifact) => artifact.guest))];
+  const guests = [...new Set(report.artifacts.map((artifact) => artifact.guest))];
   const zkvmColumns = [
     ...new Map(
-      primary.map((artifact) => [
+      report.artifacts.map((artifact) => [
         `${artifact.zkvm}:${artifact.zkvm_version}`,
         { zkvm: artifact.zkvm, version: artifact.zkvm_version },
       ] as const),
     ).values(),
   ];
-  const critical = primary
+  const critical = report.artifacts
     .flatMap((artifact) =>
       artifact.findings
         .filter((finding) => finding.status === "fail")
@@ -106,7 +101,7 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
         <div className="matrix-wrap">
           <table className="matrix-table">
             <caption className="visually-hidden">
-              Primary guest ELF artifacts grouped by guest and zkVM
+              Guest ELF artifacts grouped by guest and zkVM
             </caption>
             <thead>
               <tr>
@@ -129,12 +124,12 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
                   <th scope="row">
                     <strong>{guest}</strong>
                     <small>
-                      {primary.find((artifact) => artifact.guest === guest)
+                      {report.artifacts.find((artifact) => artifact.guest === guest)
                         ?.guest_version ?? "version unavailable"}
                     </small>
                   </th>
                   {zkvmColumns.map(({ zkvm, version }) => {
-                    const artifact = primary.find(
+                    const artifact = report.artifacts.find(
                       (item) =>
                         item.guest === guest &&
                         item.zkvm === zkvm &&
@@ -155,26 +150,6 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
             </tbody>
           </table>
         </div>
-        {profiling.length > 0 && (
-          <details className="variants">
-            <summary>{profiling.length} profiling variants</summary>
-            <div>
-              {profiling.map((artifact) => (
-                <Link
-                  key={artifact.id}
-                  to={`/artifact/${encodeURIComponent(artifact.id)}`}
-                >
-                  <span>{artifact.guest} / {artifact.zkvm}</span>
-                  <small>
-                    {artifact.analysis
-                      ? formatBytes(artifact.analysis.metrics.asset_bytes)
-                      : "analysis unavailable"}
-                  </small>
-                </Link>
-              ))}
-            </div>
-          </details>
-        )}
       </section>
 
       <div className="overview-grid">
@@ -204,12 +179,14 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
           </p>
           <dl>
             <div>
-              <dt>{primary.length}</dt>
-              <dd>primary ELFs</dd>
+              <dt>{report.artifacts.length}</dt>
+              <dd>ELFs</dd>
             </div>
             <div>
               <dt>
-                {primary.filter((artifact) => artifactCounts(artifact).fail > 0).length}
+                {report.artifacts.filter(
+                  (artifact) => artifactCounts(artifact).fail > 0,
+                ).length}
               </dt>
               <dd>with static failures</dd>
             </div>

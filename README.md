@@ -28,6 +28,9 @@ not certify an ELF or zkVM.
 - Every currently cataloged standards requirement, including explicit unknowns
   for evidence that static inspection cannot establish.
 
+Release assets whose names end in `-profiling.elf` are ignored. The analyzer
+and dashboard report only the standard guest ELF for each guest/zkVM target.
+
 Minisign files are checked for presence only. The dashboard labels this
 “published, cryptographic verification not performed.” Workflow links are
 public CI evidence, not artifact attestations.

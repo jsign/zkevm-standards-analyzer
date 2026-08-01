@@ -9,16 +9,19 @@ const report = JSON.parse(await readFile(reportPath, "utf8"));
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
 };
-const primary = report.artifacts.filter((artifact) => artifact.variant === "primary");
-const profiling = report.artifacts.filter(
-  (artifact) => artifact.variant === "profiling",
-);
 
 assert(report.schema_version === "1", "expected ReportV1");
 assert(report.release.tag === "v0.14.1", "expected the v0.14.1 fixture release");
-assert(report.artifacts.length === 9, "expected all nine published ELF assets");
-assert(primary.length === 7, "expected seven primary ELF assets");
-assert(profiling.length === 2, "expected two profiling variants");
+assert(report.artifacts.length === 7, "expected seven non-profiling ELF assets");
+assert(
+  report.artifacts.every(
+    (artifact) =>
+      artifact.variant === "primary" &&
+      !artifact.id.endsWith("-profiling") &&
+      !artifact.provenance.elf.name.endsWith("-profiling.elf"),
+  ),
+  "profiling ELFs must be excluded from the report",
+);
 assert(
   report.standards.stale_paths.length === 0,
   "v0.14.1 acceptance statuses require a reviewed standards snapshot",
@@ -42,8 +45,8 @@ assert(
   "summary evidence counts must equal the atomic findings",
 );
 
-const openvm = primary.filter((artifact) => artifact.zkvm === "openvm");
-assert(openvm.length === 2, "expected both OpenVM primary artifacts");
+const openvm = report.artifacts.filter((artifact) => artifact.zkvm === "openvm");
+assert(openvm.length === 2, "expected both OpenVM artifacts");
 for (const artifact of openvm) {
   assert(
     artifact.findings.some(
@@ -54,10 +57,10 @@ for (const artifact of openvm) {
   );
 }
 
-const zesu = primary.find(
+const zesu = report.artifacts.find(
   (artifact) => artifact.guest === "zesu" && artifact.zkvm === "zisk",
 );
-assert(zesu, "expected the Zesu/ZisK primary artifact");
+assert(zesu, "expected the Zesu/ZisK artifact");
 assert(
   zesu.findings.some(
     (finding) =>
@@ -67,5 +70,5 @@ assert(
 );
 
 console.log(
-  `accepted ${report.release.tag}: ${primary.length} primary, ${profiling.length} profiling`,
+  `accepted ${report.release.tag}: ${report.artifacts.length} non-profiling ELFs`,
 );

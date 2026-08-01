@@ -443,42 +443,12 @@ table {
   font-size: 12px;
 }
 
-.variants {
-  margin-top: 18px;
-  border-top: 1px solid var(--line);
-}
-
-.variants summary,
 .raw-symbols summary {
   padding: 16px 0 4px;
   color: var(--green);
   cursor: pointer;
   font-size: 12px;
   font-weight: 750;
-}
-
-.variants > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.variants a {
-  min-width: 210px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  text-decoration: none;
-}
-
-.variants a span,
-.variants a small {
-  display: block;
-}
-
-.variants a small {
-  margin-top: 5px;
-  color: var(--muted);
 }
 
 .overview-grid,

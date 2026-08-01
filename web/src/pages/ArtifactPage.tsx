@@ -44,7 +44,7 @@ export function ArtifactPage({
         <span>{artifact.zkvm}</span>
       </div>
       <PageHeader
-        eyebrow={`${artifact.origin} · ${artifact.variant} artifact`}
+        eyebrow={`${artifact.origin} artifact`}
         title={`${artifact.guest} on ${artifact.zkvm}`}
         description={`${artifact.guest_version ?? "Unknown guest version"} · ${artifact.zkvm_version} · ${artifact.release_target_label ?? "target label unavailable"}`}
         aside={

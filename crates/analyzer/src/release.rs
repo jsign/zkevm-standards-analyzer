@@ -5,7 +5,7 @@ use url::Url;
 
 use crate::{
     github::{GithubAsset, GithubRelease},
-    model::{ArtifactOrigin, ArtifactVariant},
+    model::ArtifactOrigin,
 };
 
 #[derive(Debug, Clone)]
@@ -16,7 +16,6 @@ pub struct DiscoveredElf {
     pub guest: String,
     pub zkvm: String,
     pub zkvm_version: String,
-    pub variant: ArtifactVariant,
     pub metadata: Option<ReleaseRow>,
 }
 
@@ -59,11 +58,10 @@ pub fn discover_elves(release: &GithubRelease, zkvm_identifiers: &[String]) -> V
         .iter()
         .filter_map(|asset| {
             let filename = asset.name.strip_suffix(".elf")?;
-            let (family, variant) = if let Some(base) = filename.strip_suffix("-profiling") {
-                (base, ArtifactVariant::Profiling)
-            } else {
-                (filename, ArtifactVariant::Primary)
-            };
+            if filename.ends_with("-profiling") {
+                return None;
+            }
+            let family = filename;
             let parsed = parse_artifact_stem(family, zkvm_identifiers)?;
             let metadata = row_by_asset
                 .get(&asset.name)
@@ -76,7 +74,6 @@ pub fn discover_elves(release: &GithubRelease, zkvm_identifiers: &[String]) -> V
                 guest: parsed.0,
                 zkvm: parsed.1,
                 zkvm_version: parsed.2,
-                variant,
                 metadata,
             })
         })
@@ -85,12 +82,12 @@ pub fn discover_elves(release: &GithubRelease, zkvm_identifiers: &[String]) -> V
         (
             left.guest.as_str(),
             left.zkvm.as_str(),
-            variant_order(left.variant),
+            left.zkvm_version.as_str(),
         )
             .cmp(&(
                 right.guest.as_str(),
                 right.zkvm.as_str(),
-                variant_order(right.variant),
+                right.zkvm_version.as_str(),
             ))
     });
     discovered
@@ -191,13 +188,6 @@ fn clean_cell(cell: &str) -> String {
     cell.trim().trim_matches('`').to_string()
 }
 
-fn variant_order(variant: ArtifactVariant) -> u8 {
-    match variant {
-        ArtifactVariant::Primary => 0,
-        ArtifactVariant::Profiling => 1,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{discover_elves, parse_artifact_stem, parse_release_rows, parse_source_asset_url};
@@ -261,5 +251,35 @@ mod tests {
         let artifacts = discover_elves(&release, &["sp1".to_string()]);
         assert_eq!(artifacts.len(), 1);
         assert!(artifacts[0].metadata.is_none());
+    }
+
+    #[test]
+    fn ignores_profiling_elves() {
+        let release = GithubRelease {
+            tag_name: "v1".into(),
+            target_commitish: "main".into(),
+            html_url: "https://github.com/example/release".into(),
+            published_at: "2026-01-01T00:00:00Z".into(),
+            name: None,
+            body: String::new(),
+            assets: vec![
+                asset("stateless-validator-reth-zisk-v1.0.0.elf"),
+                asset("stateless-validator-reth-zisk-v1.0.0-profiling.elf"),
+            ],
+        };
+
+        let artifacts = discover_elves(&release, &["zisk".to_string()]);
+
+        assert_eq!(artifacts.len(), 1);
+        assert_eq!(artifacts[0].id, "stateless-validator-reth-zisk-v1.0.0");
+    }
+
+    fn asset(name: &str) -> GithubAsset {
+        GithubAsset {
+            name: name.into(),
+            browser_download_url: format!("https://github.com/example/{name}"),
+            size: 1,
+            digest: None,
+        }
     }
 }

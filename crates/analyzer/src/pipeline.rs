@@ -12,9 +12,9 @@ use crate::{
     elf::analyze_elf,
     github::{DownloadResult, GithubAsset, GithubClient, GithubRelease},
     model::{
-        AnalyzerIdentity, ArtifactOrigin, ArtifactReport, AssetEvidence, EvidenceCounts,
-        LicenseEvidence, PlatformReport, ProvenanceEvidence, ReleaseIdentity, ReportSchemaVersion,
-        ReportV1, SourceEvidence, StandardsSource,
+        AnalyzerIdentity, ArtifactOrigin, ArtifactReport, ArtifactVariant, AssetEvidence,
+        EvidenceCounts, LicenseEvidence, PlatformReport, ProvenanceEvidence, ReleaseIdentity,
+        ReportSchemaVersion, ReportV1, SourceEvidence, StandardsSource,
     },
     release::{compiler_version, discover_elves, parse_source_asset_url},
     rules::{
@@ -55,12 +55,9 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
         github.resolve_ref(STANDARDS_OWNER, STANDARDS_REPO, &options.standards_ref)
     )?;
     let discovered = discover_elves(&release, &catalog.zkvm_identifiers);
-    if !discovered
-        .iter()
-        .any(|artifact| artifact.variant == crate::model::ArtifactVariant::Primary)
-    {
+    if discovered.is_empty() {
         bail!(
-            "release {} contains no recognized primary ELF",
+            "release {} contains no recognized non-profiling ELF",
             release.tag_name
         );
     }
@@ -224,7 +221,7 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
             guest_version,
             zkvm: discovered_elf.zkvm,
             zkvm_version,
-            variant: discovered_elf.variant,
+            variant: ArtifactVariant::Primary,
             origin,
             release_target_label,
             analysis: None,
@@ -603,32 +600,9 @@ impl<'a> DownloadCache<'a> {
 mod tests {
     use std::collections::BTreeMap;
 
-    use crate::{
-        github::{GithubAsset, GithubRelease},
-        release::discover_elves,
-    };
+    use crate::github::GithubAsset;
 
     use super::{compare_github_digest, signature_for};
-
-    #[test]
-    fn groups_profiling_variant_with_primary_family() {
-        let release = GithubRelease {
-            tag_name: "v1".into(),
-            target_commitish: "abc".into(),
-            html_url: "https://github.com/example/release".into(),
-            published_at: "2026-01-01T00:00:00Z".into(),
-            name: None,
-            body: String::new(),
-            assets: vec![
-                asset("stateless-validator-reth-zisk-v1.0.0.elf"),
-                asset("stateless-validator-reth-zisk-v1.0.0-profiling.elf"),
-            ],
-        };
-        let zkvms = vec!["zisk".to_string()];
-        let artifacts = discover_elves(&release, &zkvms);
-        assert_eq!(artifacts.len(), 2);
-        assert_eq!(artifacts[0].family_id, artifacts[1].family_id);
-    }
 
     #[test]
     fn pairs_exact_signature_names() {

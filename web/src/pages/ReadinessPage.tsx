@@ -7,7 +7,6 @@ import {
 import type { ReportV1 } from "../types";
 
 export function ReadinessPage({ report }: { report: ReportV1 }) {
-  const primary = report.artifacts.filter((artifact) => artifact.variant === "primary");
   return (
     <>
       <PageHeader
@@ -81,7 +80,7 @@ export function ReadinessPage({ report }: { report: ReportV1 }) {
               </tr>
             </thead>
             <tbody>
-              {primary.map((artifact) => {
+              {report.artifacts.map((artifact) => {
                 const vk = artifact.provenance.verification_key;
                 const licenses = artifact.provenance.licenses;
                 return (
