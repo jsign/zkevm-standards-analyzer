@@ -220,7 +220,7 @@ export function ArtifactPage({
       <section className="section-block">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Atomic requirements</p>
+            <p className="eyebrow">Testable requirements</p>
             <h2>All findings</h2>
           </div>
         </div>

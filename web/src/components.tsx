@@ -15,6 +15,14 @@ export const STATUS_LABELS: Record<FindingStatus, string> = {
   not_applicable: "N/A",
 };
 
+const FINDING_STATUS_ORDER: Record<FindingStatus, number> = {
+  fail: 0,
+  warning: 1,
+  pass: 2,
+  unknown: 3,
+  not_applicable: 4,
+};
+
 export function Layout({
   children,
   currentPath = "/",
@@ -131,9 +139,13 @@ export function FindingList({
   if (findings.length === 0) {
     return <p className="empty-state">No findings in this group.</p>;
   }
+  const sortedFindings = [...findings].sort(
+    (left, right) =>
+      FINDING_STATUS_ORDER[left.status] - FINDING_STATUS_ORDER[right.status],
+  );
   return (
     <div className={`finding-list ${compact ? "finding-list-compact" : ""}`}>
-      {findings.map((finding, index) => (
+      {sortedFindings.map((finding, index) => (
         <article className="finding" key={`${finding.rule_id}-${index}`}>
           <div className="finding-main">
             <StatusBadge status={finding.status} />

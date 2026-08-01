@@ -80,6 +80,46 @@ describe("standards", () => {
 });
 
 describe("artifact ELF structure", () => {
+  it("labels and orders testable requirements by actionable status", () => {
+    const baseFinding = fixtureReport.artifacts[0].findings[0];
+    const statuses = [
+      "not_applicable",
+      "pass",
+      "unknown",
+      "warning",
+      "fail",
+    ] as const;
+    const report = {
+      ...fixtureReport,
+      artifacts: [
+        {
+          ...fixtureReport.artifacts[0],
+          findings: statuses.map((status) => ({
+            ...baseFinding,
+            rule_id: `test.${status}`,
+            title: `${status} finding`,
+            status,
+          })),
+        },
+      ],
+    };
+
+    render(
+      <ArtifactPage
+        report={report}
+        artifactId={fixtureReport.artifacts[0].id}
+      />,
+    );
+
+    expect(screen.getByText("Testable requirements")).toBeInTheDocument();
+    expect(screen.queryByText("Atomic requirements")).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole("article").map((article) =>
+        article.querySelector(".status")?.textContent?.trim(),
+      ),
+    ).toEqual(["Fail", "Warning", "Pass", "Unknown", "N/A"]);
+  });
+
   it("shows the ELF hierarchy and nests program segments under their table", () => {
     const report = {
       ...fixtureReport,
