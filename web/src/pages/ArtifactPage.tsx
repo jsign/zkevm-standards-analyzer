@@ -7,6 +7,7 @@ import {
   formatBytes,
 } from "../components";
 import {
+  classifyRiscvTargetComponent,
   decodeRiscvArchitecture,
   RISCV_ARCH_ATTRIBUTE_REFERENCE,
 } from "../riscv";
@@ -565,26 +566,52 @@ function RiscvArchitecture({
 
       {components.length > 0 && (
         <div className="isa-component-grid">
-          {components.map((component) => (
-            <a
-              className="isa-component"
-              href={component.referenceUrl}
-              key={component.id}
-            >
-              <span className="isa-component-name">
-                <code>{component.label}</code>
-                {component.version && <small>v{component.version}</small>}
-              </span>
-              <span>{component.description}</span>
-              <small>
-                {component.referenceLabel} <span aria-hidden="true">↗</span>
-              </small>
-            </a>
-          ))}
+          {components.map((component) => {
+            const policy = classifyRiscvTargetComponent(component.id);
+            return (
+              <a
+                className={[
+                  "isa-component",
+                  policy && `isa-component--${policy.status}`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                href={component.referenceUrl}
+                key={component.id}
+              >
+                <span className="isa-component-name">
+                  <code>{component.label}</code>
+                  {component.version && <small>v{component.version}</small>}
+                </span>
+                {policy && (
+                  <span
+                    aria-label={`${policy.label}. ${policy.description}`}
+                    className={`isa-policy isa-policy--${policy.status}`}
+                    title={policy.description}
+                  >
+                    <b aria-hidden="true">
+                      {policy.status === "excluded" ? "×" : "!"}
+                    </b>
+                    {policy.label}
+                  </span>
+                )}
+                <span className="isa-component-description">
+                  {component.description}
+                </span>
+                <small>
+                  {component.referenceLabel} <span aria-hidden="true">↗</span>
+                </small>
+              </a>
+            );
+          })}
         </div>
       )}
 
       <p className="isa-declaration-note">
+        A red <strong>×</strong> marks an extension explicitly excluded by the
+        target standard; an amber <strong>!</strong> marks one outside the minimal{" "}
+        <code>RV64IM_Zicclsm</code> target, which is not an incompatibility on its
+        own.{" "}
         Versions use <code>p</code> as the decimal point: <code>2p1</code> means{" "}
         <code>2.1</code>. This is the target ISA declared by the ELF, not a census
         of instructions observed in its code.

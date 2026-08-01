@@ -714,6 +714,7 @@ table {
 }
 
 .isa-component {
+  position: relative;
   display: flex;
   min-width: 0;
   min-height: 128px;
@@ -722,6 +723,14 @@ table {
   padding: 14px 15px;
   background: var(--paper);
   text-decoration: none;
+}
+
+.isa-component--excluded {
+  box-shadow: inset 3px 0 var(--red);
+}
+
+.isa-component--outside-minimal {
+  box-shadow: inset 3px 0 var(--amber);
 }
 
 .isa-component:hover {
@@ -754,7 +763,35 @@ table {
   font-size: 9px;
 }
 
-.isa-component > span:nth-child(2) {
+.isa-policy {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.isa-policy b {
+  font-size: 13px;
+  line-height: 0.75;
+}
+
+.isa-policy--excluded {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.isa-policy--outside-minimal {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.isa-component-description {
   color: #4f5d56;
   font-size: 11px;
   line-height: 1.45;
@@ -781,6 +818,10 @@ table {
 .isa-declaration-note code {
   color: #385048;
   font-size: 9px;
+}
+
+.isa-declaration-note strong {
+  color: var(--ink);
 }
 
 .isa-declaration-empty {

@@ -7,6 +7,12 @@ export type RiscvIsaComponent = {
   referenceUrl: string;
 };
 
+export type RiscvTargetPolicy = {
+  status: "excluded" | "outside-minimal";
+  label: string;
+  description: string;
+};
+
 type ExtensionReference = Omit<RiscvIsaComponent, "id" | "label" | "version">;
 
 const UNPRIVILEGED_ISA = "https://docs.riscv.org/reference/isa/unpriv";
@@ -84,6 +90,8 @@ const EXTENSION_REFERENCES: Record<string, ExtensionReference> = {
 export const RISCV_ARCH_ATTRIBUTE_REFERENCE =
   "https://riscv-non-isa.github.io/riscv-elf-psabi-doc/#tag_riscv_arch";
 
+const MINIMAL_TARGET_EXTENSIONS = new Set(["m", "zicclsm", "zmmul"]);
+
 export function decodeRiscvArchitecture(architecture: string): RiscvIsaComponent[] {
   const [baseToken, ...extensionTokens] = architecture.toLowerCase().split("_");
   const baseMatch = baseToken.match(/^rv(32|64)([ie])(\d+(?:p\d+)*)?(.*)$/);
@@ -108,6 +116,41 @@ export function decodeRiscvArchitecture(architecture: string): RiscvIsaComponent
   }
 
   return components;
+}
+
+export function classifyRiscvTargetComponent(
+  componentId: string,
+): RiscvTargetPolicy | null {
+  const id = componentId.toLowerCase();
+
+  if (id.startsWith("rv") || MINIMAL_TARGET_EXTENSIONS.has(id)) {
+    return null;
+  }
+
+  if (id === "c" || id.startsWith("zc")) {
+    return {
+      status: "excluded",
+      label: "Excluded by standard",
+      description:
+        "Compressed instruction extensions are explicitly excluded by the target standard.",
+    };
+  }
+
+  if (id === "f" || id === "d") {
+    return {
+      status: "excluded",
+      label: "Excluded by standard",
+      description:
+        "F and D floating-point extensions are explicitly excluded by the soft-float target standard.",
+    };
+  }
+
+  return {
+    status: "outside-minimal",
+    label: "Outside minimal target",
+    description:
+      "This extension is not part of the standard's minimal RV64IM_Zicclsm target; its presence is not an incompatibility on its own.",
+  };
 }
 
 function makeBaseComponent(

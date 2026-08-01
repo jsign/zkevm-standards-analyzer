@@ -164,6 +164,44 @@ describe("artifact ELF structure", () => {
     expect(
       screen.getByRole("link", { name: /Zmmul.*without division.*RISC-V ISA/i }),
     ).toHaveAttribute("href", expect.stringContaining("m-st-ext.html"));
+    expect(screen.getAllByText("Outside minimal target")).toHaveLength(3);
+  });
+
+  it("marks extensions explicitly excluded by the target standard", () => {
+    const report = {
+      ...fixtureReport,
+      artifacts: [
+        {
+          ...fixtureReport.artifacts[0],
+          analysis: {
+            ...fixtureAnalysis,
+            header: {
+              ...fixtureAnalysis.header,
+              riscv_arch: "rv64imac_f_d",
+            },
+          },
+        },
+      ],
+    };
+
+    render(
+      <ArtifactPage
+        report={report}
+        artifactId={fixtureReport.artifacts[0].id}
+      />,
+    );
+
+    expect(screen.getAllByText("Excluded by standard")).toHaveLength(3);
+    expect(
+      screen.getByLabelText(
+        /Excluded by standard.*Compressed instruction extensions/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByLabelText(
+        /Excluded by standard.*floating-point extensions/i,
+      ),
+    ).toHaveLength(2);
   });
 });
 

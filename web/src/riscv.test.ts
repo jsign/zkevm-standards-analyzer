@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { decodeRiscvArchitecture } from "./riscv";
+import {
+  classifyRiscvTargetComponent,
+  decodeRiscvArchitecture,
+} from "./riscv";
 
 describe("RISC-V architecture decoder", () => {
   it("decodes every ISA component observed in the generated report", () => {
@@ -29,5 +32,29 @@ describe("RISC-V architecture decoder", () => {
       { label: "M", version: null },
       { label: "Zicsr", version: null },
     ]);
+  });
+
+  it("distinguishes explicitly excluded extensions from profile additions", () => {
+    expect(classifyRiscvTargetComponent("c")).toMatchObject({
+      status: "excluded",
+    });
+    expect(classifyRiscvTargetComponent("Zca")).toMatchObject({
+      status: "excluded",
+    });
+    expect(classifyRiscvTargetComponent("f")).toMatchObject({
+      status: "excluded",
+    });
+    expect(classifyRiscvTargetComponent("d")).toMatchObject({
+      status: "excluded",
+    });
+    expect(classifyRiscvTargetComponent("a")).toMatchObject({
+      status: "outside-minimal",
+    });
+    expect(classifyRiscvTargetComponent("Zaamo")).toMatchObject({
+      status: "outside-minimal",
+    });
+    expect(classifyRiscvTargetComponent("m")).toBeNull();
+    expect(classifyRiscvTargetComponent("Zmmul")).toBeNull();
+    expect(classifyRiscvTargetComponent("Zicclsm")).toBeNull();
   });
 });
