@@ -40,14 +40,20 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
     let catalog = load_catalog(&options.rules_path)?;
     let github = GithubClient::new()?;
 
-    let (release, standards) = tokio::try_join!(
-        github.release(ERE_OWNER, ERE_REPO, &options.release),
+    let release_request = async {
+        let release = github
+            .release(ERE_OWNER, ERE_REPO, &options.release)
+            .await?;
+        let release_ref = github
+            .resolve_ref(ERE_OWNER, ERE_REPO, &release.tag_name)
+            .await
+            .context("failed to resolve the release tag to a commit")?;
+        Ok::<_, anyhow::Error>((release, release_ref))
+    };
+    let ((release, release_ref), standards) = tokio::try_join!(
+        release_request,
         github.resolve_ref(STANDARDS_OWNER, STANDARDS_REPO, &options.standards_ref)
     )?;
-    let release_ref = github
-        .resolve_ref(ERE_OWNER, ERE_REPO, &release.tag_name)
-        .await
-        .context("failed to resolve the release tag to a commit")?;
     let discovered = discover_elves(&release, &catalog.zkvm_identifiers);
     if !discovered
         .iter()
@@ -71,19 +77,20 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
         .filter(|(path, _)| referenced_paths.contains(path.as_str()))
         .map(|(path, sha)| (path.clone(), sha.clone()))
         .collect();
-    let workflow_url = github
-        .successful_workflow_url(
-            ERE_OWNER,
-            ERE_REPO,
-            &release_ref.commit,
-            "Compile and Release Compiled Guests",
-        )
-        .await
-        .ok()
-        .flatten();
-    let ere_license = github
-        .license_evidence(ERE_OWNER, ERE_REPO, &release_ref.commit)
-        .await;
+    let workflow_request = async {
+        github
+            .successful_workflow_url(
+                ERE_OWNER,
+                ERE_REPO,
+                &release_ref.commit,
+                "Compile and Release Compiled Guests",
+            )
+            .await
+            .ok()
+            .flatten()
+    };
+    let license_request = github.license_evidence(ERE_OWNER, ERE_REPO, &release_ref.commit);
+    let (workflow_url, ere_license) = tokio::join!(workflow_request, license_request);
     let public_key_url = release
         .assets
         .iter()
@@ -99,7 +106,7 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
         .collect::<BTreeMap<_, _>>();
     let mut source_releases = HashMap::<String, GithubRelease>::new();
     let mut source_licenses = HashMap::<String, LicenseEvidence>::new();
-    let mut artifacts = Vec::new();
+    let mut pending_artifacts = Vec::new();
 
     for discovered_elf in discovered {
         let (elf_evidence, elf_path) = asset_evidence(
@@ -109,22 +116,14 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
         )
         .await;
         let operational_error = elf_evidence.error.clone();
-        let analysis = elf_path
-            .as_deref()
-            .map(|path| {
-                let patterns = catalog
-                    .accelerator_symbol_patterns
-                    .get(&discovered_elf.zkvm)
-                    .map(Vec::as_slice)
-                    .unwrap_or_default();
-                analyze_elf(path, patterns)
-            })
-            .transpose()
-            .map_err(|error| error.to_string());
-        let (analysis, operational_error) = match analysis {
-            Ok(analysis) => (analysis, operational_error),
-            Err(error) => (None, Some(error)),
-        };
+        let analysis_task = elf_path.map(|path| {
+            let patterns = catalog
+                .accelerator_symbol_patterns
+                .get(&discovered_elf.zkvm)
+                .cloned()
+                .unwrap_or_default();
+            tokio::task::spawn_blocking(move || analyze_elf(&path, &patterns))
+        });
 
         let vk_name = format!("{}.vk", discovered_elf.family_id);
         let verification_key = if let Some(vk_asset) = assets_by_name.get(&vk_name) {
@@ -218,7 +217,7 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
         let release_target_label = metadata
             .map(|row| row.target.clone())
             .filter(|value| !value.is_empty());
-        let mut artifact = ArtifactReport {
+        let artifact = ArtifactReport {
             id: discovered_elf.id,
             family_id: discovered_elf.family_id,
             guest: discovered_elf.guest,
@@ -228,12 +227,26 @@ pub async fn analyze(options: AnalyzeOptions) -> anyhow::Result<ReportV1> {
             variant: discovered_elf.variant,
             origin,
             release_target_label,
-            analysis,
+            analysis: None,
             provenance,
             findings: Vec::new(),
             ingestion_warnings,
             operational_error,
         };
+        pending_artifacts.push((artifact, analysis_task));
+    }
+
+    let mut artifacts = Vec::with_capacity(pending_artifacts.len());
+    for (mut artifact, analysis_task) in pending_artifacts {
+        if let Some(task) = analysis_task {
+            match task.await {
+                Ok(Ok(analysis)) => artifact.analysis = Some(analysis),
+                Ok(Err(error)) => artifact.operational_error = Some(error.to_string()),
+                Err(error) => {
+                    artifact.operational_error = Some(format!("ELF analysis task failed: {error}"));
+                }
+            }
+        }
         artifact.findings =
             artifact_findings(&catalog, &artifact, &standards.commit, &standards.blobs);
         artifacts.push(artifact);
