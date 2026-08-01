@@ -1,0 +1,45 @@
+name: Quality checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust 1.97.1
+        run: rustup show
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+      - name: Lint Rust
+        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+      - name: Test Rust
+        run: cargo test --locked --workspace
+      - name: Check generated JSON Schema
+        run: |
+          cargo run --quiet --locked -p zkevm-analyzer -- schema --output /tmp/report.schema.json
+          cmp web/src/report.schema.json /tmp/report.schema.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dashboard dependencies
+        working-directory: web
+        run: npm ci
+      - name: Audit production dependencies
+        working-directory: web
+        run: npm audit --omit=dev
+      - name: Test dashboard
+        working-directory: web
+        run: npm test
+      - name: Build dashboard
+        working-directory: web
+        run: npm run build

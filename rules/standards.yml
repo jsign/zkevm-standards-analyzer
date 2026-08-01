@@ -1,0 +1,446 @@
+reviewed_snapshot: b1c0260785ca7dc5b44b1b58ab19d7dbe3ce6c05
+zkvm_identifiers:
+  - openvm
+  - sp1
+  - zisk
+accelerator_symbol_patterns:
+  openvm:
+    - openvm
+  sp1:
+    - sp1
+  zisk:
+    - zisk
+    - ziskos
+rules:
+  - id: elf.header.magic
+    title: ELF magic
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: header-validation
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.magic
+  - id: elf.header.class64
+    title: ELF64 class
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: header-validation
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.class64
+  - id: elf.header.little-endian
+    title: Little-endian encoding
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: header-validation
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.little_endian
+  - id: elf.header.riscv
+    title: RISC-V machine
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: header-validation
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.riscv_machine
+  - id: elf.header.executable
+    title: Static executable type
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: header-validation
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.executable_type
+  - id: elf.linkage.static
+    title: No dynamic interpreter or linking
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: non-goals
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.static
+  - id: elf.load.file-ranges
+    title: Load ranges are within the file
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: loadable-image-from-program-headers
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.load_ranges
+  - id: elf.load.memory-size
+    title: File size does not exceed memory size
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: loadable-image-from-program-headers
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.mem_size
+  - id: elf.load.vma-lma
+    title: Virtual and load addresses agree
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: initial-memory-state
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.vma_lma
+  - id: elf.load.alignment
+    title: Segment alignment
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: loadable-image-from-program-headers
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.alignment
+  - id: elf.load.no-overlap
+    title: Load segments do not overlap
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: loadable-image-from-program-headers
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.no_overlap
+  - id: elf.permissions.wx
+    title: Write XOR execute
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: segment-permissions
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.wx
+  - id: elf.permissions.executable
+    title: Executable permission combination
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: segment-permissions
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.exec_permissions
+  - id: elf.entry.aligned
+    title: Entry point alignment
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: entry-point
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.entry_aligned
+  - id: elf.entry.executable
+    title: Entry point is executable
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: entry-point
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: elf.entry_executable
+  - id: elf.separation.code-data
+    title: Code and read-only data separation
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/static-library-and-linker-script/README.md
+    standard_anchor: linker-script
+    reviewed_blob_sha: e512c1958220518e8d74114831c44a3314605315
+    evaluator: elf.code_data
+  - id: linker.symbol.start
+    title: _start entry symbol
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/static-library-and-linker-script/README.md
+    standard_anchor: entry-point-and-initialization
+    reviewed_blob_sha: e512c1958220518e8d74114831c44a3314605315
+    evaluator: linker.start
+  - id: linker.symbol.main
+    title: main application symbol
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/static-library-and-linker-script/README.md
+    standard_anchor: main-contract
+    reviewed_blob_sha: e512c1958220518e8d74114831c44a3314605315
+    evaluator: linker.main
+  - id: linker.entry.start
+    title: Entry point equals _start
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/static-library-and-linker-script/README.md
+    standard_anchor: linker-script
+    reviewed_blob_sha: e512c1958220518e8d74114831c44a3314605315
+    evaluator: linker.entry_start
+  - id: target.compressed-excluded
+    title: Compressed instructions excluded
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/riscv-target/target.md
+    standard_anchor: goals
+    reviewed_blob_sha: e41b58112b7ecf74ae8a7b6569ec2ddefe70ae20
+    evaluator: target.compressed
+  - id: target.soft-float
+    title: Floating point excluded
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/riscv-target/target.md
+    standard_anchor: goals
+    reviewed_blob_sha: e41b58112b7ecf74ae8a7b6569ec2ddefe70ae20
+    evaluator: target.floating_point
+  - id: target.no-syscalls
+    title: No privileged or syscall instructions
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/riscv-target/target.md
+    standard_anchor: goals
+    reviewed_blob_sha: e41b58112b7ecf74ae8a7b6569ec2ddefe70ae20
+    evaluator: target.privileged
+  - id: target.additional-atomic
+    title: Additional atomic extension evidence
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/riscv-target/target.md
+    standard_anchor: goals
+    reviewed_blob_sha: e41b58112b7ecf74ae8a7b6569ec2ddefe70ae20
+    evaluator: target.atomic
+  - id: interface.visible-symbols
+    title: Visible IO and heap interface evidence
+    scope: artifact
+    subject: toolchain
+    method: static
+    standard_path: standards/static-library-and-linker-script/README.md
+    standard_anchor: static-library
+    reviewed_blob_sha: e512c1958220518e8d74114831c44a3314605315
+    evaluator: interface.symbols
+  - id: accelerators.linked-evidence
+    title: Linked accelerator symbol inventory
+    scope: artifact
+    subject: artifact
+    method: static
+    standard_path: standards/c-interface-accelerators/README.md
+    standard_anchor: header-file
+    reviewed_blob_sha: 3c2d13655ea8f296e0509a5e8d318f68383d6d8f
+    evaluator: accelerator.inventory
+  - id: provenance.elf-digest
+    title: ELF asset digest
+    scope: artifact
+    subject: artifact
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.digest
+  - id: provenance.elf-signature
+    title: ELF signature publication
+    scope: artifact
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.elf_signature
+  - id: provenance.verification-key
+    title: Verification key publication
+    scope: artifact
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.vk
+  - id: provenance.vk-signature
+    title: Verification key signature publication
+    scope: artifact
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.vk_signature
+  - id: provenance.public-key
+    title: Minisign public key publication
+    scope: artifact
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.public_key
+  - id: provenance.upstream-equality
+    title: Republished upstream byte equality
+    scope: artifact
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.upstream
+  - id: provenance.source-license
+    title: Source repository dual license
+    scope: artifact
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: guest-program-rubric
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: provenance.license
+  - id: runtime.target-zicclsm
+    title: Zicclsm runtime support
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/riscv-target/target.md
+    standard_anchor: zicclsm-extension
+    reviewed_blob_sha: e41b58112b7ecf74ae8a7b6569ec2ddefe70ae20
+    evaluator: runtime.zicclsm
+  - id: runtime.unaligned-observability
+    title: Unaligned access observability
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/riscv-target/target.md
+    standard_anchor: zicclsm-extension
+    reviewed_blob_sha: e41b58112b7ecf74ae8a7b6569ec2ddefe70ae20
+    evaluator: runtime.unaligned_metrics
+  - id: runtime.loader-validation
+    title: Loader validation and deterministic initialization
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/elf-loading-and-validation/README.md
+    standard_anchor: validation-before-proving
+    reviewed_blob_sha: eba9de844347e04d3a69bdcb751c414a3acee706
+    evaluator: runtime.loader
+  - id: runtime.io-semantics
+    title: IO interface semantics
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/io-interface/README.md
+    standard_anchor: the-interface
+    reviewed_blob_sha: f0411e72d823d3acabd7c20bb2d8420002cf9be7
+    evaluator: runtime.io
+  - id: runtime.static-library
+    title: Static library startup behavior
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/static-library-and-linker-script/README.md
+    standard_anchor: entry-point-and-initialization
+    reviewed_blob_sha: e512c1958220518e8d74114831c44a3314605315
+    evaluator: runtime.static_library
+  - id: runtime.accelerator-interface
+    title: Accelerator C interface behavior
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/c-interface-accelerators/README.md
+    standard_anchor: header-file
+    reviewed_blob_sha: 3c2d13655ea8f296e0509a5e8d318f68383d6d8f
+    evaluator: runtime.accelerators
+  - id: runtime.termination
+    title: Successful and abnormal termination semantics
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/standard-termination-semantics/README.md
+    standard_anchor: specification
+    reviewed_blob_sha: ca6d598a580c8420148cd27b7b0eb48bda10117a
+    evaluator: runtime.termination
+  - id: runtime.memory-layout
+    title: Vendor memory layout and linker constraints
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/memory-layout-restrictions/README.md
+    standard_anchor: memory-layout-restrictions
+    reviewed_blob_sha: 2001d0dcc74554e01e8ceb4238749bab2e30d378
+    evaluator: runtime.memory_layout
+  - id: runtime.guard-regions
+    title: Null and stack guard regions
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/memory-safety-guard-regions/README.md
+    standard_anchor: specification
+    reviewed_blob_sha: f5892c176f6aa167b4188e0244f24563775ac6e4
+    evaluator: runtime.guard_regions
+  - id: runtime.instruction-misalignment
+    title: Instruction address misalignment termination
+    scope: platform
+    subject: zkvm_runtime
+    method: dynamic
+    standard_path: standards/instruction-address-misaligned-exception-semantics/README.md
+    standard_anchor: specification
+    reviewed_blob_sha: 2476a5a3307653a29c379430e20937508a93d09c
+    evaluator: runtime.misaligned_instruction
+  - id: readiness.eest
+    title: EEST specification tests
+    scope: release
+    subject: guest_project
+    method: dynamic
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: eest-specs-and-tests
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: readiness.eest
+  - id: readiness.public-ci
+    title: Public CI workflow evidence
+    scope: release
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: release-elfs-in-teams-gh-repo-via-ci
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: readiness.public_ci
+  - id: readiness.dual-license
+    title: Repository MIT and Apache-2.0 licenses
+    scope: release
+    subject: guest_project
+    method: provenance
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: guest-program-rubric
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: readiness.license
+  - id: readiness.formal-verification
+    title: Custom compiler formal-verification requirements
+    scope: release
+    subject: toolchain
+    method: manual
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: guest-program-rubric
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: readiness.formal_verification
+  - id: readiness.sustainability
+    title: Maintainer sustainability
+    scope: release
+    subject: guest_project
+    method: manual
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: guest-program-rubric
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: readiness.sustainability
+  - id: readiness.benchmarks
+    title: Benchmark requirements
+    scope: release
+    subject: guest_project
+    method: manual
+    standard_path: handbooks/guest-handbook.md
+    standard_anchor: guest-program-rubric
+    reviewed_blob_sha: 396640ab29519971f4af0290e93a683557ec3cbe
+    evaluator: readiness.benchmarks

@@ -1,0 +1,29 @@
+name: v0.14.1 live smoke test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust 1.97.1
+        run: rustup show
+      - name: Analyze v0.14.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cargo run --release --locked -p zkevm-analyzer -- analyze \
+            --release v0.14.1 \
+            --standards-ref main \
+            --rules rules/standards.yml \
+            --output /tmp/report.json
+      - name: Check live acceptance invariants
+        run: node scripts/check-live-report.mjs /tmp/report.json

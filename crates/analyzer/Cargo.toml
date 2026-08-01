@@ -1,0 +1,30 @@
+[package]
+name = "zkevm-analyzer"
+version = "0.1.0"
+description = "Evidence-first analyzer for zkEVM guest ELF releases"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+capstone.workspace = true
+chrono.workspace = true
+clap.workspace = true
+futures-util.workspace = true
+goblin.workspace = true
+hex.workspace = true
+regex.workspace = true
+reqwest.workspace = true
+schemars.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+

@@ -1,0 +1,6 @@
+/target/
+/web/node_modules/
+/web/dist/
+/web/public/data/report.json
+*.tsbuildinfo
+.DS_Store

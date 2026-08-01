@@ -1,0 +1,1039 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReportV1",
+  "type": "object",
+  "properties": {
+    "analyzer": {
+      "$ref": "#/$defs/AnalyzerIdentity"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ArtifactReport"
+      }
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PlatformReport"
+      }
+    },
+    "readiness": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      }
+    },
+    "release": {
+      "$ref": "#/$defs/ReleaseIdentity"
+    },
+    "schema_version": {
+      "$ref": "#/$defs/ReportSchemaVersion"
+    },
+    "standards": {
+      "$ref": "#/$defs/StandardsSource"
+    },
+    "summary": {
+      "$ref": "#/$defs/EvidenceCounts"
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "analyzer",
+    "standards",
+    "release",
+    "summary",
+    "artifacts",
+    "platforms",
+    "readiness"
+  ],
+  "$defs": {
+    "AcceleratorEvidence": {
+      "type": "object",
+      "properties": {
+        "note": {
+          "type": "string"
+        },
+        "platform_symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "standard_symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "standard_symbols",
+        "platform_symbols",
+        "note"
+      ]
+    },
+    "AnalyzerIdentity": {
+      "type": "object",
+      "properties": {
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ]
+    },
+    "ArtifactOrigin": {
+      "type": "string",
+      "enum": [
+        "compiled",
+        "republished"
+      ]
+    },
+    "ArtifactReport": {
+      "type": "object",
+      "properties": {
+        "analysis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ElfAnalysis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "family_id": {
+          "type": "string"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Finding"
+          }
+        },
+        "guest": {
+          "type": "string"
+        },
+        "guest_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "ingestion_warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "operational_error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "$ref": "#/$defs/ArtifactOrigin"
+        },
+        "provenance": {
+          "$ref": "#/$defs/ProvenanceEvidence"
+        },
+        "release_target_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "variant": {
+          "$ref": "#/$defs/ArtifactVariant"
+        },
+        "zkvm": {
+          "type": "string"
+        },
+        "zkvm_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "family_id",
+        "guest",
+        "zkvm",
+        "zkvm_version",
+        "variant",
+        "origin",
+        "provenance",
+        "findings",
+        "ingestion_warnings"
+      ]
+    },
+    "ArtifactVariant": {
+      "type": "string",
+      "enum": [
+        "primary",
+        "profiling"
+      ]
+    },
+    "AssetEvidence": {
+      "type": "object",
+      "properties": {
+        "computed_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "digest_matches": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "github_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "signature_published": {
+          "type": "boolean"
+        },
+        "signature_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "url",
+        "size",
+        "signature_published"
+      ]
+    },
+    "Confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "not_applicable"
+      ]
+    },
+    "ElfAnalysis": {
+      "type": "object",
+      "properties": {
+        "accelerators": {
+          "$ref": "#/$defs/AcceleratorEvidence"
+        },
+        "checks": {
+          "$ref": "#/$defs/ElfChecks"
+        },
+        "header": {
+          "$ref": "#/$defs/ElfHeader"
+        },
+        "instructions": {
+          "$ref": "#/$defs/InstructionCensus"
+        },
+        "metrics": {
+          "$ref": "#/$defs/ElfMetrics"
+        },
+        "program_headers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramHeader"
+          }
+        },
+        "symbols": {
+          "$ref": "#/$defs/SymbolEvidence"
+        }
+      },
+      "required": [
+        "metrics",
+        "header",
+        "program_headers",
+        "symbols",
+        "instructions",
+        "accelerators",
+        "checks"
+      ]
+    },
+    "ElfChecks": {
+      "type": "object",
+      "properties": {
+        "alignment_valid": {
+          "type": "boolean"
+        },
+        "code_data_separated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "elf64": {
+          "type": "boolean"
+        },
+        "entry_aligned": {
+          "type": "boolean"
+        },
+        "entry_in_executable_segment": {
+          "type": "boolean"
+        },
+        "entry_matches_start": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "executable_permissions_valid": {
+          "type": "boolean"
+        },
+        "executable_type": {
+          "type": "boolean"
+        },
+        "file_size_within_memory_size": {
+          "type": "boolean"
+        },
+        "little_endian": {
+          "type": "boolean"
+        },
+        "load_ranges_in_file": {
+          "type": "boolean"
+        },
+        "load_segments_do_not_overlap": {
+          "type": "boolean"
+        },
+        "magic": {
+          "type": "boolean"
+        },
+        "riscv_machine": {
+          "type": "boolean"
+        },
+        "statically_linked": {
+          "type": "boolean"
+        },
+        "vma_equals_lma": {
+          "type": "boolean"
+        },
+        "write_xor_execute": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "magic",
+        "elf64",
+        "little_endian",
+        "riscv_machine",
+        "executable_type",
+        "statically_linked",
+        "load_ranges_in_file",
+        "file_size_within_memory_size",
+        "vma_equals_lma",
+        "alignment_valid",
+        "load_segments_do_not_overlap",
+        "write_xor_execute",
+        "executable_permissions_valid",
+        "entry_aligned",
+        "entry_in_executable_segment"
+      ]
+    },
+    "ElfHeader": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "elf_type": {
+          "type": "string"
+        },
+        "entry": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "entry_hex": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "little_endian": {
+          "type": "boolean"
+        },
+        "machine": {
+          "type": "string"
+        },
+        "riscv_arch": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "class",
+        "little_endian",
+        "elf_type",
+        "machine",
+        "entry",
+        "entry_hex",
+        "flags"
+      ]
+    },
+    "ElfMetrics": {
+      "type": "object",
+      "properties": {
+        "asset_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "bss_zero_fill_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "executable_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "has_debug_sections": {
+          "type": "boolean"
+        },
+        "load_file_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "load_memory_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "program_header_count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "read_only_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "section_count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "stripped": {
+          "type": "boolean"
+        },
+        "symbol_count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "writable_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "asset_bytes",
+        "load_file_bytes",
+        "load_memory_bytes",
+        "executable_bytes",
+        "read_only_bytes",
+        "writable_bytes",
+        "bss_zero_fill_bytes",
+        "program_header_count",
+        "section_count",
+        "symbol_count",
+        "stripped",
+        "has_debug_sections"
+      ]
+    },
+    "EvidenceCounts": {
+      "type": "object",
+      "properties": {
+        "fail": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "not_applicable": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "pass": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "unknown": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "pass",
+        "fail",
+        "warning",
+        "unknown",
+        "not_applicable"
+      ]
+    },
+    "Finding": {
+      "type": "object",
+      "properties": {
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "explanation": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/VerificationMethod"
+        },
+        "rule_id": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "standard_anchor": {
+          "type": "string"
+        },
+        "standard_path": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/FindingStatus"
+        },
+        "subject": {
+          "$ref": "#/$defs/FindingSubject"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "title",
+        "subject",
+        "status",
+        "method",
+        "confidence",
+        "explanation",
+        "standard_path",
+        "standard_anchor",
+        "source_url",
+        "evidence"
+      ]
+    },
+    "FindingStatus": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "warning",
+        "unknown",
+        "not_applicable"
+      ]
+    },
+    "FindingSubject": {
+      "type": "string",
+      "enum": [
+        "artifact",
+        "release",
+        "toolchain",
+        "guest_project",
+        "zkvm_runtime"
+      ]
+    },
+    "InstructionCensus": {
+      "type": "object",
+      "properties": {
+        "atomic": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "compressed": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "decoded_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "decoded_instructions": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "floating_point": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "privileged_or_syscall": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "source": {
+          "type": "string"
+        },
+        "top_mnemonics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MnemonicCount"
+          }
+        },
+        "undecodable_bytes": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "source",
+        "confidence",
+        "decoded_instructions",
+        "decoded_bytes",
+        "undecodable_bytes",
+        "compressed",
+        "atomic",
+        "floating_point",
+        "privileged_or_syscall",
+        "top_mnemonics"
+      ]
+    },
+    "LicenseEvidence": {
+      "type": "object",
+      "properties": {
+        "apache_2": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inspected_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mit": {
+          "type": "boolean"
+        },
+        "reference": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "reference",
+        "mit",
+        "apache_2",
+        "inspected_paths"
+      ]
+    },
+    "MnemonicCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "mnemonic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mnemonic",
+        "count"
+      ]
+    },
+    "PlatformReport": {
+      "type": "object",
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Finding"
+          }
+        },
+        "zkvm": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "zkvm",
+        "findings"
+      ]
+    },
+    "ProgramHeader": {
+      "type": "object",
+      "properties": {
+        "alignment": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "file_size": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "flags": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "memory_size": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "offset": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "physical_address": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "virtual_address": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kind",
+        "offset",
+        "virtual_address",
+        "physical_address",
+        "file_size",
+        "memory_size",
+        "flags",
+        "alignment"
+      ]
+    },
+    "ProvenanceEvidence": {
+      "type": "object",
+      "properties": {
+        "elf": {
+          "$ref": "#/$defs/AssetEvidence"
+        },
+        "licenses": {
+          "$ref": "#/$defs/LicenseEvidence"
+        },
+        "public_key_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signature_policy": {
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification_key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workflow_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "elf",
+        "signature_policy",
+        "licenses"
+      ]
+    },
+    "ReleaseIdentity": {
+      "type": "object",
+      "properties": {
+        "commit": {
+          "type": "string"
+        },
+        "compiler": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "published_at": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "workflow_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "repository",
+        "tag",
+        "commit",
+        "published_at",
+        "url"
+      ]
+    },
+    "ReportSchemaVersion": {
+      "type": "string",
+      "enum": [
+        "1"
+      ]
+    },
+    "SourceEvidence": {
+      "type": "object",
+      "properties": {
+        "asset_url": {
+          "type": "string"
+        },
+        "computed_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "matches_hub_asset": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "release_tag": {
+          "type": "string"
+        },
+        "release_url": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "signature_published": {
+          "type": "boolean"
+        },
+        "signature_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "repository",
+        "release_tag",
+        "release_url",
+        "asset_url",
+        "signature_published"
+      ]
+    },
+    "StandardsSource": {
+      "type": "object",
+      "properties": {
+        "blobs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "commit": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "requested_ref": {
+          "type": "string"
+        },
+        "reviewed_snapshot": {
+          "type": "string"
+        },
+        "stale_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tree": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "requested_ref",
+        "commit",
+        "tree",
+        "reviewed_snapshot",
+        "blobs",
+        "stale_paths"
+      ]
+    },
+    "SymbolEvidence": {
+      "type": "object",
+      "properties": {
+        "heap_end": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "heap_start": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "main": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "read_input": {
+          "type": "boolean"
+        },
+        "start": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "write_output": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "read_input",
+        "write_output"
+      ]
+    },
+    "VerificationMethod": {
+      "type": "string",
+      "enum": [
+        "static",
+        "provenance",
+        "dynamic",
+        "manual"
+      ]
+    }
+  }
+}
