@@ -277,6 +277,13 @@
             "$ref": "#/$defs/ProgramHeader"
           }
         },
+        "section_headers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SectionHeader"
+          }
+        },
         "symbols": {
           "$ref": "#/$defs/SymbolEvidence"
         }
@@ -392,17 +399,50 @@
           "format": "uint32",
           "minimum": 0
         },
+        "header_size": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
         "little_endian": {
           "type": "boolean"
         },
         "machine": {
           "type": "string"
         },
+        "program_header_entry_size": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "program_header_offset": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 0,
+          "minimum": 0
+        },
         "riscv_arch": {
           "type": [
             "string",
             "null"
           ]
+        },
+        "section_header_entry_size": {
+          "type": "integer",
+          "format": "uint16",
+          "default": 0,
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "section_header_offset": {
+          "type": "integer",
+          "format": "uint64",
+          "default": 0,
+          "minimum": 0
         }
       },
       "required": [
@@ -885,6 +925,55 @@
       "type": "string",
       "enum": [
         "1"
+      ]
+    },
+    "SectionHeader": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "alignment": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "entry_size": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "flags": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "offset": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "size": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "flags",
+        "address",
+        "offset",
+        "size",
+        "alignment",
+        "entry_size"
       ]
     },
     "SourceEvidence": {

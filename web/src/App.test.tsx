@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import { ArtifactPage } from "./pages/ArtifactPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { StandardsPage } from "./pages/StandardsPage";
-import { fixtureReport } from "./test/fixture";
+import { fixtureAnalysis, fixtureReport } from "./test/fixture";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -45,6 +46,50 @@ describe("standards", () => {
       "true",
     );
     expect(screen.queryByText("The artifact is not ELF64.")).not.toBeInTheDocument();
+  });
+});
+
+describe("artifact ELF structure", () => {
+  it("shows the ELF hierarchy and nests program segments under their table", () => {
+    const report = {
+      ...fixtureReport,
+      artifacts: [
+        {
+          ...fixtureReport.artifacts[0],
+          analysis: fixtureAnalysis,
+        },
+      ],
+    };
+
+    render(
+      <ArtifactPage
+        report={report}
+        artifactId={fixtureReport.artifacts[0].id}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "ELF structure" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "ELF header" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Program header table" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Program segments" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Section header table" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("2 entries")).toBeInTheDocument();
+    expect(screen.getByText("Load segments").nextElementSibling).toHaveTextContent("2");
+    expect(screen.getByText("10 sections")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sections" })).toBeInTheDocument();
+    expect(screen.getByText(".text")).toBeInTheDocument();
+    expect(screen.getByText(".symtab")).toBeInTheDocument();
+    expect(screen.getByText("RISC-V architecture attributes")).toBeInTheDocument();
   });
 });
 

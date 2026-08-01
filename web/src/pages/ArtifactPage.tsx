@@ -6,7 +6,7 @@ import {
   artifactCounts,
   formatBytes,
 } from "../components";
-import type { ReportV1 } from "../types";
+import type { ElfAnalysis, ReportV1 } from "../types";
 
 export function ArtifactPage({
   report,
@@ -124,95 +124,10 @@ export function ArtifactPage({
 
       {analysis && (
         <>
-          <section className="section-block">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Binary anatomy</p>
-                <h2>ELF metrics</h2>
-              </div>
-              <span className="mono">{analysis.header.riscv_arch ?? "No Tag_arch"}</span>
-            </div>
-            <div className="metric-grid">
-              <Metric label="Asset size" value={formatBytes(analysis.metrics.asset_bytes)} />
-              <Metric
-                label="Load file bytes"
-                value={formatBytes(analysis.metrics.load_file_bytes)}
-              />
-              <Metric
-                label="Load image"
-                value={formatBytes(analysis.metrics.load_memory_bytes)}
-              />
-              <Metric
-                label="Executable"
-                value={formatBytes(analysis.metrics.executable_bytes)}
-              />
-              <Metric
-                label="Read-only data"
-                value={formatBytes(analysis.metrics.read_only_bytes)}
-              />
-              <Metric
-                label="Writable"
-                value={formatBytes(analysis.metrics.writable_bytes)}
-              />
-              <Metric
-                label="Zero fill"
-                value={formatBytes(analysis.metrics.bss_zero_fill_bytes)}
-              />
-              <Metric label="Entry" value={analysis.header.entry_hex} />
-              <Metric label="Class" value={analysis.header.class} />
-              <Metric
-                label="Program headers"
-                value={String(analysis.metrics.program_header_count)}
-              />
-              <Metric
-                label="Sections"
-                value={String(analysis.metrics.section_count)}
-              />
-              <Metric
-                label="Symbols"
-                value={analysis.metrics.symbol_count.toLocaleString()}
-              />
-              <Metric
-                label="Symbol state"
-                value={analysis.metrics.stripped ? "Stripped" : "Present"}
-              />
-              <Metric
-                label="Debug sections"
-                value={analysis.metrics.has_debug_sections ? "Present" : "Absent"}
-              />
-            </div>
-            <div className="header-facts">
-              <Info label="Machine" value={analysis.header.machine} />
-              <Info label="ELF type" value={analysis.header.elf_type} />
-              <Info
-                label="Encoding"
-                value={analysis.header.little_endian ? "Little-endian" : "Big-endian"}
-              />
-              <Info
-                label="ELF flags"
-                value={`0x${analysis.header.flags.toString(16)}`}
-                mono
-              />
-              <Info
-                label="_start"
-                value={
-                  analysis.symbols.start === null
-                    ? "Not visible"
-                    : `0x${analysis.symbols.start.toString(16)}`
-                }
-                mono
-              />
-              <Info
-                label="main"
-                value={
-                  analysis.symbols.main === null
-                    ? "Not visible"
-                    : `0x${analysis.symbols.main.toString(16)}`
-                }
-                mono
-              />
-            </div>
-          </section>
+          <ElfStructure
+            analysis={analysis}
+            caption={`${artifact.guest} on ${artifact.zkvm}`}
+          />
 
           <div className="detail-grid">
             <section className="section-block">
@@ -294,47 +209,6 @@ export function ArtifactPage({
             </section>
           </div>
 
-          <section className="section-block">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Loader view</p>
-                <h2>Program headers</h2>
-              </div>
-            </div>
-            <div className="table-scroll">
-              <table className="data-table">
-                <caption className="visually-hidden">
-                  ELF program headers for {artifact.guest} on {artifact.zkvm}
-                </caption>
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Flags</th>
-                    <th>Offset</th>
-                    <th>Virtual address</th>
-                    <th>Physical address</th>
-                    <th>File size</th>
-                    <th>Memory size</th>
-                    <th>Align</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analysis.program_headers.map((header, index) => (
-                    <tr key={`${header.kind}-${index}`}>
-                      <td>{header.kind}</td>
-                      <td><code>{header.flags || "—"}</code></td>
-                      <td><code>0x{header.offset.toString(16)}</code></td>
-                      <td><code>0x{header.virtual_address.toString(16)}</code></td>
-                      <td><code>0x{header.physical_address.toString(16)}</code></td>
-                      <td>{formatBytes(header.file_size)}</td>
-                      <td>{formatBytes(header.memory_size)}</td>
-                      <td><code>0x{header.alignment.toString(16)}</code></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
         </>
       )}
 
@@ -349,6 +223,378 @@ export function ArtifactPage({
       </section>
     </>
   );
+}
+
+function ElfStructure({
+  analysis,
+  caption,
+}: {
+  analysis: ElfAnalysis;
+  caption: string;
+}) {
+  const loadSegmentCount = analysis.program_headers.filter(
+    (header) => header.kind === "LOAD" || header.kind === "PT_LOAD",
+  ).length;
+
+  return (
+    <section className="section-block elf-structure">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Binary anatomy</p>
+          <h2>ELF structure</h2>
+        </div>
+        <span className="mono elf-architecture">
+          {analysis.header.riscv_arch ?? "No Tag_arch"}
+        </span>
+      </div>
+
+      <div className="elf-root">
+        <span className="elf-root-mark" aria-hidden="true">ELF</span>
+        <div>
+          <span>Executable file</span>
+          <strong>{formatBytes(analysis.metrics.asset_bytes)}</strong>
+          <small>
+            One header points to the loader’s segments and the linker’s sections.
+          </small>
+        </div>
+      </div>
+
+      <div className="elf-tree">
+        <div className="elf-node">
+          <ElfNodeHeading
+            index="01"
+            eyebrow="File identity"
+            title="ELF header"
+            description="Describes the binary and locates the two header tables below."
+            meta={
+              analysis.header.header_size
+                ? `${analysis.header.header_size} bytes`
+                : "Size not reported"
+            }
+          />
+          <div className="elf-fact-grid elf-header-grid">
+            <Info label="Class" value={analysis.header.class} />
+            <Info label="Machine" value={analysis.header.machine} />
+            <Info label="ELF type" value={analysis.header.elf_type} />
+            <Info
+              label="Encoding"
+              value={analysis.header.little_endian ? "Little-endian" : "Big-endian"}
+            />
+            <Info label="Entry point" value={analysis.header.entry_hex} mono />
+            <Info
+              label="ELF flags"
+              value={`0x${analysis.header.flags.toString(16)}`}
+              mono
+            />
+            <Info
+              label="_start"
+              value={
+                analysis.symbols.start === null
+                  ? "Not visible"
+                  : toHex(analysis.symbols.start)
+              }
+              mono
+            />
+            <Info
+              label="main"
+              value={
+                analysis.symbols.main === null
+                  ? "Not visible"
+                  : toHex(analysis.symbols.main)
+              }
+              mono
+            />
+          </div>
+        </div>
+
+        <div className="elf-node">
+          <ElfNodeHeading
+            index="02"
+            eyebrow="Loader view"
+            title="Program header table"
+            description="Tells the runtime which parts of the file become memory segments."
+            meta={`${analysis.metrics.program_header_count} entries`}
+          />
+          <div className="elf-table-facts">
+            <Info
+              label="Table offset"
+              value={optionalHex(analysis.header.program_header_offset)}
+              mono
+            />
+            <Info
+              label="Entry size"
+              value={optionalBytes(analysis.header.program_header_entry_size)}
+            />
+            <Info label="Load segments" value={String(loadSegmentCount)} />
+            <Info
+              label="File bytes mapped"
+              value={formatBytes(analysis.metrics.load_file_bytes)}
+            />
+            <Info
+              label="Memory image"
+              value={formatBytes(analysis.metrics.load_memory_bytes)}
+            />
+          </div>
+          <div className="section-memory-summary" aria-label="Load segment memory summary">
+            <Metric
+              label="Executable"
+              value={formatBytes(analysis.metrics.executable_bytes)}
+            />
+            <Metric
+              label="Read-only data"
+              value={formatBytes(analysis.metrics.read_only_bytes)}
+            />
+            <Metric
+              label="Writable"
+              value={formatBytes(analysis.metrics.writable_bytes)}
+            />
+            <Metric
+              label="Zero fill"
+              value={formatBytes(analysis.metrics.bss_zero_fill_bytes)}
+            />
+          </div>
+
+          <div className="elf-branch">
+            <div className="elf-branch-heading">
+              <div>
+                <span className="elf-branch-kicker">Entries in the table</span>
+                <h4>Program segments</h4>
+              </div>
+              <p>
+                Segments are the loader-facing view of the ELF. They are not the
+                same thing as sections.
+              </p>
+            </div>
+            <div className="table-scroll">
+              <table className="data-table segment-table">
+                <caption className="visually-hidden">
+                  ELF program segments for {caption}
+                </caption>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Type</th>
+                    <th>Permissions</th>
+                    <th>File offset</th>
+                    <th>Virtual address</th>
+                    <th>Physical address</th>
+                    <th>File size</th>
+                    <th>Memory size</th>
+                    <th>Align</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analysis.program_headers.map((header, index) => (
+                    <tr key={`${header.kind}-${index}`}>
+                      <td className="segment-index">
+                        {String(index).padStart(2, "0")}
+                      </td>
+                      <td>
+                        <strong>{header.kind}</strong>
+                      </td>
+                      <td>
+                        <code className="permission-badge">
+                          {header.flags || "—"}
+                        </code>
+                      </td>
+                      <td><code>{toHex(header.offset)}</code></td>
+                      <td><code>{toHex(header.virtual_address)}</code></td>
+                      <td><code>{toHex(header.physical_address)}</code></td>
+                      <td>{formatBytes(header.file_size)}</td>
+                      <td>{formatBytes(header.memory_size)}</td>
+                      <td><code>{toHex(header.alignment)}</code></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="elf-node">
+          <ElfNodeHeading
+            index="03"
+            eyebrow="Linker view"
+            title="Section header table"
+            description="Catalogs logical regions used for code, data, symbols, and metadata."
+            meta={`${analysis.metrics.section_count} sections`}
+          />
+          <div className="elf-table-facts elf-section-facts">
+            <Info
+              label="Table offset"
+              value={optionalHex(analysis.header.section_header_offset)}
+              mono
+            />
+            <Info
+              label="Entry size"
+              value={optionalBytes(analysis.header.section_header_entry_size)}
+            />
+            <Info
+              label="Symbols"
+              value={analysis.metrics.symbol_count.toLocaleString()}
+            />
+            <Info
+              label="Symbol table"
+              value={analysis.metrics.stripped ? "Stripped" : "Present"}
+            />
+            <Info
+              label="Debug sections"
+              value={analysis.metrics.has_debug_sections ? "Present" : "Absent"}
+            />
+          </div>
+          {analysis.section_headers?.length ? (
+            <div className="elf-branch">
+              <div className="elf-branch-heading">
+                <div>
+                  <span className="elf-branch-kicker">Entries in the table</span>
+                  <h4>Sections</h4>
+                </div>
+                <p>
+                  The count includes the reserved null entry at index 0. The
+                  remaining rows organize code, data, symbols, strings, and
+                  architecture metadata.
+                </p>
+              </div>
+              <div className="table-scroll">
+                <table className="data-table segment-table section-table">
+                  <caption className="visually-hidden">
+                    ELF sections for {caption}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Purpose</th>
+                      <th>Type</th>
+                      <th>Flags</th>
+                      <th>Address</th>
+                      <th>File offset</th>
+                      <th>Size</th>
+                      <th>Entry size</th>
+                      <th>Align</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analysis.section_headers.map((section, index) => (
+                      <tr key={`${section.name}-${index}`}>
+                        <td className="segment-index">
+                          {String(index).padStart(2, "0")}
+                        </td>
+                        <td>
+                          <code className="section-name">
+                            {section.name || "—"}
+                          </code>
+                        </td>
+                        <td className="section-purpose">
+                          {sectionPurpose(section.name, section.kind)}
+                        </td>
+                        <td><strong>{section.kind}</strong></td>
+                        <td>
+                          <code className="permission-badge">
+                            {section.flags || "—"}
+                          </code>
+                        </td>
+                        <td><code>{toHex(section.address)}</code></td>
+                        <td><code>{toHex(section.offset)}</code></td>
+                        <td>{formatBytes(section.size)}</td>
+                        <td>
+                          {section.entry_size
+                            ? formatBytes(section.entry_size)
+                            : "—"}
+                        </td>
+                        <td><code>{toHex(section.alignment)}</code></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="section-flags-key">
+                Flags: <code>W</code> writable · <code>A</code> allocated in
+                memory · <code>X</code> executable · <code>M</code> mergeable ·{" "}
+                <code>S</code> strings · <code>I</code> info link ·{" "}
+                <code>L</code> link order · <code>O</code> OS processing ·{" "}
+                <code>G</code> group · <code>T</code> TLS ·{" "}
+                <code>C</code> compressed · <code>E</code> excluded
+              </p>
+            </div>
+          ) : (
+            <p className="elf-unreported">
+              Individual section entries were not captured in this report.
+              Regenerate it with the current analyzer to list them here.
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ElfNodeHeading({
+  index,
+  eyebrow,
+  title,
+  description,
+  meta,
+}: {
+  index: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  meta: string;
+}) {
+  return (
+    <div className="elf-node-heading">
+      <span className="elf-node-index" aria-hidden="true">{index}</span>
+      <div>
+        <span className="elf-node-eyebrow">{eyebrow}</span>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+      <code>{meta}</code>
+    </div>
+  );
+}
+
+function toHex(value: number) {
+  return `0x${value.toString(16)}`;
+}
+
+function optionalHex(value: number | undefined) {
+  return value === undefined ? "Not reported" : toHex(value);
+}
+
+function optionalBytes(value: number | undefined) {
+  return value === undefined ? "Not reported" : `${value} bytes`;
+}
+
+function sectionPurpose(name: string, kind: string) {
+  const knownSections: Record<string, string> = {
+    ".text": "Executable code",
+    ".rodata": "Read-only constants",
+    ".data": "Initialized writable data",
+    ".bss": "Zero-initialized data",
+    ".comment": "Toolchain metadata",
+    ".riscv.attributes": "RISC-V architecture attributes",
+    ".symtab": "Symbol definitions",
+    ".dynsym": "Dynamic symbol definitions",
+    ".shstrtab": "Section-name strings",
+    ".strtab": "Symbol-name strings",
+  };
+  if (name in knownSections) {
+    return knownSections[name];
+  }
+
+  const knownTypes: Record<string, string> = {
+    SHT_NULL: "Reserved entry",
+    SHT_NOBITS: "Zero-fill data",
+    SHT_NOTE: "Auxiliary metadata",
+    SHT_PROGBITS: "Program-defined data",
+    SHT_RELA: "Relocations with addends",
+    SHT_REL: "Relocations",
+    SHT_STRTAB: "String data",
+    SHT_SYMTAB: "Symbol definitions",
+  };
+  return knownTypes[kind] ?? "Specialized metadata";
 }
 
 function Info({

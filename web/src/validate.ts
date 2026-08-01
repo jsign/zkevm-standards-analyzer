@@ -3,6 +3,11 @@ import reportSchema from "./report.schema.json";
 import type { ReportV1 } from "./types";
 
 const ajv = new Ajv2020({ allErrors: true, strict: false });
+ajv.addFormat("uint16", {
+  type: "number",
+  validate: (value: number) =>
+    Number.isInteger(value) && value >= 0 && value <= 0xffff,
+});
 ajv.addFormat("uint32", {
   type: "number",
   validate: (value: number) =>

@@ -83,8 +83,14 @@ export interface ElfAnalysis {
     entry_hex: string;
     flags: number;
     riscv_arch: string | null;
+    header_size?: number;
+    program_header_offset?: number;
+    program_header_entry_size?: number;
+    section_header_offset?: number;
+    section_header_entry_size?: number;
   };
   program_headers: ProgramHeader[];
+  section_headers?: SectionHeader[];
   symbols: {
     start: number | null;
     main: number | null;
@@ -122,6 +128,17 @@ export interface ProgramHeader {
   memory_size: number;
   flags: string;
   alignment: number;
+}
+
+export interface SectionHeader {
+  name: string;
+  kind: string;
+  flags: string;
+  address: number;
+  offset: number;
+  size: number;
+  alignment: number;
+  entry_size: number;
 }
 
 export interface ProvenanceEvidence {

@@ -12,12 +12,16 @@ use goblin::elf::{
     Elf,
     header::{ELFCLASS64, ELFDATA2LSB, EM_RISCV, ET_EXEC, machine_to_str},
     program_header::{PF_R, PF_W, PF_X, PT_DYNAMIC, PT_INTERP, PT_LOAD, pt_to_str},
-    section_header::{SHF_ALLOC, SHF_EXECINSTR, SHF_WRITE, SHT_NOBITS},
+    section_header::{
+        SHF_ALLOC, SHF_COMPRESSED, SHF_EXCLUDE, SHF_EXECINSTR, SHF_GROUP, SHF_INFO_LINK,
+        SHF_LINK_ORDER, SHF_MERGE, SHF_OS_NONCONFORMING, SHF_STRINGS, SHF_TLS, SHF_WRITE,
+        SHT_NOBITS, sht_to_str,
+    },
 };
 
 use crate::model::{
     AcceleratorEvidence, Confidence, ElfAnalysis, ElfChecks, ElfHeader, ElfMetrics,
-    InstructionCensus, MnemonicCount, ProgramHeader, SymbolEvidence,
+    InstructionCensus, MnemonicCount, ProgramHeader, SectionHeader, SymbolEvidence,
 };
 
 pub fn analyze_elf(path: &Path, accelerator_patterns: &[String]) -> anyhow::Result<ElfAnalysis> {
@@ -50,6 +54,25 @@ pub fn analyze_elf(path: &Path, accelerator_patterns: &[String]) -> anyhow::Resu
             memory_size: header.p_memsz,
             flags: flags_string(header.p_flags),
             alignment: header.p_align,
+        })
+        .collect();
+
+    let section_headers = elf
+        .section_headers
+        .iter()
+        .map(|header| SectionHeader {
+            name: elf
+                .shdr_strtab
+                .get_at(header.sh_name)
+                .unwrap_or_default()
+                .to_string(),
+            kind: section_type_string(header.sh_type),
+            flags: section_flags_string(header.sh_flags),
+            address: header.sh_addr,
+            offset: header.sh_offset,
+            size: header.sh_size,
+            alignment: header.sh_addralign,
+            entry_size: header.sh_entsize,
         })
         .collect();
 
@@ -103,8 +126,14 @@ pub fn analyze_elf(path: &Path, accelerator_patterns: &[String]) -> anyhow::Resu
             entry_hex: format!("0x{:X}", elf.entry),
             flags: elf.header.e_flags,
             riscv_arch,
+            header_size: elf.header.e_ehsize,
+            program_header_offset: elf.header.e_phoff,
+            program_header_entry_size: elf.header.e_phentsize,
+            section_header_offset: elf.header.e_shoff,
+            section_header_entry_size: elf.header.e_shentsize,
         },
         program_headers,
+        section_headers,
         symbols,
         instructions,
         accelerators,
@@ -535,6 +564,40 @@ fn flags_string(flags: u32) -> String {
         .collect()
 }
 
+fn section_flags_string(flags: u64) -> String {
+    [
+        (SHF_WRITE as u64, 'W'),
+        (SHF_ALLOC as u64, 'A'),
+        (SHF_EXECINSTR as u64, 'X'),
+        (SHF_MERGE as u64, 'M'),
+        (SHF_STRINGS as u64, 'S'),
+        (SHF_INFO_LINK as u64, 'I'),
+        (SHF_LINK_ORDER as u64, 'L'),
+        (SHF_OS_NONCONFORMING as u64, 'O'),
+        (SHF_GROUP as u64, 'G'),
+        (SHF_TLS as u64, 'T'),
+        (SHF_COMPRESSED as u64, 'C'),
+        (SHF_EXCLUDE as u64, 'E'),
+    ]
+    .into_iter()
+    .filter_map(|(mask, label)| (flags & mask != 0).then_some(label))
+    .collect()
+}
+
+fn section_type_string(section_type: u32) -> String {
+    const SHT_RISCV_ATTRIBUTES: u32 = 0x7000_0003;
+    if section_type == SHT_RISCV_ATTRIBUTES {
+        return "SHT_RISCV_ATTRIBUTES".to_string();
+    }
+
+    let name = sht_to_str(section_type);
+    if name == "UNKNOWN_SHT" {
+        format!("0x{section_type:X}")
+    } else {
+        name.to_string()
+    }
+}
+
 fn truncate_symbol(name: &str) -> String {
     const MAX: usize = 200;
     if name.len() <= MAX {
@@ -557,7 +620,8 @@ mod tests {
 
     use super::{
         LoadMetrics, classify_mnemonic, evaluate_header, evaluate_load_segments,
-        extract_arch_ascii, riscv_instruction_length, summarize_load_segments,
+        extract_arch_ascii, riscv_instruction_length, section_flags_string, section_type_string,
+        summarize_load_segments,
     };
 
     #[test]
@@ -581,6 +645,24 @@ mod tests {
         assert!(classify_mnemonic("fadd.d", 4).floating_point);
         assert!(classify_mnemonic("ecall", 4).privileged_or_syscall);
         assert!(!classify_mnemonic("addi", 4).privileged_or_syscall);
+    }
+
+    #[test]
+    fn renders_compact_section_flags() {
+        assert_eq!(
+            section_flags_string(
+                goblin::elf::section_header::SHF_ALLOC as u64
+                    | goblin::elf::section_header::SHF_EXECINSTR as u64
+            ),
+            "AX"
+        );
+        assert_eq!(section_flags_string(0), "");
+    }
+
+    #[test]
+    fn identifies_riscv_and_unknown_section_types() {
+        assert_eq!(section_type_string(0x7000_0003), "SHT_RISCV_ATTRIBUTES");
+        assert_eq!(section_type_string(0x1234_5678), "0x12345678");
     }
 
     #[test]

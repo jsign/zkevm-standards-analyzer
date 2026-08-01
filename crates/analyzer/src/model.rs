@@ -156,6 +156,8 @@ pub struct ElfAnalysis {
     pub metrics: ElfMetrics,
     pub header: ElfHeader,
     pub program_headers: Vec<ProgramHeader>,
+    #[serde(default)]
+    pub section_headers: Vec<SectionHeader>,
     pub symbols: SymbolEvidence,
     pub instructions: InstructionCensus,
     pub accelerators: AcceleratorEvidence,
@@ -188,6 +190,16 @@ pub struct ElfHeader {
     pub entry_hex: String,
     pub flags: u32,
     pub riscv_arch: Option<String>,
+    #[serde(default)]
+    pub header_size: u16,
+    #[serde(default)]
+    pub program_header_offset: u64,
+    #[serde(default)]
+    pub program_header_entry_size: u16,
+    #[serde(default)]
+    pub section_header_offset: u64,
+    #[serde(default)]
+    pub section_header_entry_size: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -200,6 +212,18 @@ pub struct ProgramHeader {
     pub memory_size: u64,
     pub flags: String,
     pub alignment: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SectionHeader {
+    pub name: String,
+    pub kind: String,
+    pub flags: String,
+    pub address: u64,
+    pub offset: u64,
+    pub size: u64,
+    pub alignment: u64,
+    pub entry_size: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
