@@ -398,11 +398,11 @@ table {
 .artifact-cell {
   display: flex;
   min-width: 190px;
-  min-height: 70px;
+  min-height: 58px;
   flex-direction: column;
   justify-content: space-between;
-  gap: 14px;
-  padding: 4px;
+  gap: 9px;
+  padding: 2px;
   text-decoration: none;
 }
 
@@ -411,26 +411,46 @@ table {
 }
 
 .artifact-name {
+  font-size: 13px;
   font-weight: 750;
 }
 
-.artifact-cell-counts {
+.artifact-cell-findings {
   display: flex;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 700;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.mini-fail {
+.artifact-rule {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.artifact-rule-dot {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.artifact-rule-fail {
   color: var(--red);
 }
 
-.mini-warning {
+.artifact-rule-warning {
   color: var(--amber);
 }
 
-.mini-pass {
+.artifact-clear {
   color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .matrix-empty {

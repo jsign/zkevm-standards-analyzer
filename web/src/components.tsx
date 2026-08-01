@@ -168,7 +168,10 @@ export function FindingList({
 }
 
 export function ArtifactCell({ artifact }: { artifact: ArtifactReport }) {
-  const counts = artifactCounts(artifact);
+  const highlightedFindings = artifact.findings.filter(
+    (finding) => finding.status === "fail" || finding.status === "warning",
+  );
+
   return (
     <Link className="artifact-cell" to={`/artifact/${encodeURIComponent(artifact.id)}`}>
       <span className="artifact-name">
@@ -177,13 +180,19 @@ export function ArtifactCell({ artifact }: { artifact: ArtifactReport }) {
           {" "}for {artifact.guest} on {artifact.zkvm}
         </span>
       </span>
-      <span className="artifact-cell-counts">
-        {counts.fail > 0 && <span className="mini-fail">{counts.fail} fail</span>}
-        {counts.warning > 0 && (
-          <span className="mini-warning">{counts.warning} warn</span>
-        )}
-        {counts.fail === 0 && counts.warning === 0 && (
-          <span className="mini-pass">No static failures</span>
+      <span className="artifact-cell-findings">
+        {highlightedFindings.map((finding) => (
+          <span
+            className={`artifact-rule artifact-rule-${finding.status}`}
+            key={finding.rule_id}
+            title={finding.rule_id}
+          >
+            <span className="artifact-rule-dot" aria-hidden="true" />
+            {finding.title}
+          </span>
+        ))}
+        {highlightedFindings.length === 0 && (
+          <span className="artifact-clear">No failures or warnings</span>
         )}
       </span>
     </Link>

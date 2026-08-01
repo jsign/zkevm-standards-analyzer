@@ -2,7 +2,6 @@ import { Link } from "../router";
 import {
   ArtifactCell,
   EvidenceCounts,
-  FindingList,
   PageHeader,
   shortSha,
 } from "../components";
@@ -18,14 +17,6 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
       ] as const),
     ).values(),
   ];
-  const critical = report.artifacts
-    .flatMap((artifact) =>
-      artifact.findings
-        .filter((finding) => finding.status === "fail")
-        .map((finding) => ({ artifact, finding })),
-    )
-    .slice(0, 6);
-
   return (
     <>
       {report.standards.stale_paths.length > 0 && (
@@ -149,23 +140,6 @@ export function OverviewPage({ report }: { report: ReportV1 }) {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="section-block">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Attention</p>
-            <h2>Static failures</h2>
-          </div>
-        </div>
-        {critical.length ? (
-          <FindingList
-            compact
-            findings={critical.map(({ finding }) => finding)}
-          />
-        ) : (
-          <p className="empty-state">No static failures were observed.</p>
-        )}
       </section>
     </>
   );

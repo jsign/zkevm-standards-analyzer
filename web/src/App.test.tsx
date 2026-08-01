@@ -23,6 +23,36 @@ describe("overview", () => {
     expect(screen.queryByText(/compliance percentage/i)).not.toBeInTheDocument();
   });
 
+  it("shows exact failed and warning rules in the matrix without a duplicate failure section", () => {
+    const failedFinding = fixtureReport.artifacts[0].findings[0];
+    const report = {
+      ...fixtureReport,
+      artifacts: [
+        {
+          ...fixtureReport.artifacts[0],
+          findings: [
+            failedFinding,
+            {
+              ...failedFinding,
+              rule_id: "target.compressed-excluded",
+              title: "Compressed instructions excluded",
+              status: "warning" as const,
+            },
+          ],
+        },
+      ],
+    };
+
+    render(<OverviewPage report={report} />);
+
+    expect(screen.getByText("ELF64 class")).toBeInTheDocument();
+    expect(screen.getByText("Compressed instructions excluded")).toBeInTheDocument();
+    expect(screen.queryByText("1 fail")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Static failures" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the standards drift banner without hiding raw release data", () => {
     const stale = {
       ...fixtureReport,
