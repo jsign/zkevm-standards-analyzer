@@ -8,6 +8,7 @@ import {
 } from "../components";
 import {
   classifyRiscvTargetComponent,
+  collapseImpliedRiscvComponents,
   decodeRiscvArchitecture,
   RISCV_ARCH_ATTRIBUTE_REFERENCE,
 } from "../riscv";
@@ -550,7 +551,9 @@ function RiscvArchitecture({
     );
   }
 
-  const components = decodeRiscvArchitecture(architecture);
+  const declaredComponents = decodeRiscvArchitecture(architecture);
+  const components = collapseImpliedRiscvComponents(declaredComponents);
+  const foldedComponentCount = declaredComponents.length - components.length;
 
   return (
     <div className="isa-declaration">
@@ -560,7 +563,11 @@ function RiscvArchitecture({
           <code>{architecture}</code>
         </div>
         <span>
-          {components.length} {components.length === 1 ? "component" : "components"}
+          {components.length} top-level{" "}
+          {components.length === 1 ? "component" : "components"}
+          {foldedComponentCount > 0 && (
+            <> · {foldedComponentCount} implied folded in</>
+          )}
         </span>
       </div>
 
@@ -613,8 +620,11 @@ function RiscvArchitecture({
         <code>RV64IM_Zicclsm</code> target, which is not an incompatibility on its
         own.{" "}
         Versions use <code>p</code> as the decimal point: <code>2p1</code> means{" "}
-        <code>2.1</code>. This is the target ISA declared by the ELF, not a census
-        of instructions observed in its code.
+        <code>2.1</code>. The raw value above is the normalized target ISA declared
+        by the ELF; the cards fold implied subsets into their parent extensions
+        (for example, <code>Zmmul</code> into <code>M</code>, and{" "}
+        <code>Zaamo</code>/<code>Zalrsc</code> into <code>A</code>). It is not a
+        census of instructions observed in the code.
       </p>
     </div>
   );

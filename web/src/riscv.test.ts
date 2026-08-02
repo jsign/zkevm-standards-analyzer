@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   classifyRiscvTargetComponent,
+  collapseImpliedRiscvComponents,
   decodeRiscvArchitecture,
 } from "./riscv";
 
@@ -31,6 +32,33 @@ describe("RISC-V architecture decoder", () => {
       { label: "RV64I", version: null },
       { label: "M", version: null },
       { label: "Zicsr", version: null },
+    ]);
+  });
+
+  it("folds normalized subset expansions into their parent extensions", () => {
+    const components = decodeRiscvArchitecture(
+      "rv64i2p1_m2p0_a2p1_zicclsm1p0_zmmul1p0_zaamo1p0_zalrsc1p0_zca1p0",
+    );
+
+    expect(collapseImpliedRiscvComponents(components)).toMatchObject([
+      { label: "RV64I" },
+      { label: "M" },
+      { label: "A" },
+      { label: "Zicclsm" },
+      { label: "Zca" },
+    ]);
+  });
+
+  it("keeps subset extensions when their parent is not declared", () => {
+    const components = decodeRiscvArchitecture(
+      "rv64i2p1_zmmul1p0_zaamo1p0_zalrsc1p0",
+    );
+
+    expect(collapseImpliedRiscvComponents(components)).toMatchObject([
+      { label: "RV64I" },
+      { label: "Zmmul" },
+      { label: "Zaamo" },
+      { label: "Zalrsc" },
     ]);
   });
 

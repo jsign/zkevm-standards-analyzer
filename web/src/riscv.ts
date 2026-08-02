@@ -92,6 +92,12 @@ export const RISCV_ARCH_ATTRIBUTE_REFERENCE =
 
 const MINIMAL_TARGET_EXTENSIONS = new Set(["m", "zicclsm", "zmmul"]);
 
+const IMPLIED_EXTENSION_PARENTS: Record<string, string> = {
+  zmmul: "m",
+  zaamo: "a",
+  zalrsc: "a",
+};
+
 export function decodeRiscvArchitecture(architecture: string): RiscvIsaComponent[] {
   const [baseToken, ...extensionTokens] = architecture.toLowerCase().split("_");
   const baseMatch = baseToken.match(/^rv(32|64)([ie])(\d+(?:p\d+)*)?(.*)$/);
@@ -116,6 +122,17 @@ export function decodeRiscvArchitecture(architecture: string): RiscvIsaComponent
   }
 
   return components;
+}
+
+export function collapseImpliedRiscvComponents(
+  components: RiscvIsaComponent[],
+): RiscvIsaComponent[] {
+  const componentIds = new Set(components.map(({ id }) => id.toLowerCase()));
+
+  return components.filter(({ id }) => {
+    const parentId = IMPLIED_EXTENSION_PARENTS[id.toLowerCase()];
+    return !parentId || !componentIds.has(parentId);
+  });
 }
 
 export function classifyRiscvTargetComponent(
