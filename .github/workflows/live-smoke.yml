@@ -2,8 +2,6 @@ name: v0.14.1 live smoke test
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 7 * * 0"
 
 permissions:
   contents: read
